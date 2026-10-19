@@ -4,7 +4,7 @@ $siteUrl = "https://mieunjung.github.io/ai-contents-designer/"
 $defaultProjectRef = "yvpalquguzqupvzcavni"
 
 function Invoke-SupabaseCli {
-  & npx.cmd --yes supabase@latest @args
+  & npx.cmd --yes supabase@latest @args --workdir $PSScriptRoot
   if ($LASTEXITCODE -ne 0) {
     throw "Supabase CLI failed. Sign in with 'npx supabase@latest login' and try again."
   }

@@ -30,7 +30,7 @@ GitHub Pages는 HTML만 실행하므로 모델 호출은 Supabase Edge Function 
 2. 사용할 Supabase 프로젝트를 준비합니다. Windows에 Node.js 18 이상과 GitHub CLI가 설치되어 있어야 합니다.
 3. Windows에 Node.js 18 이상과 GitHub CLI를 설치하고 GitHub와 Supabase CLI에 로그인합니다(`gh auth login`, `npx supabase@latest login`). 인증 토큰을 채팅이나 저장소 파일에 넣지 마세요.
 
-4. PowerShell에서 이 폴더로 이동해 `.\deploy-supabase.ps1`을 실행합니다. 프로젝트 reference는 기본값으로 현재 프로젝트를 사용합니다. 스크립트가 SQL 마이그레이션을 적용하고 AI 함수를 배포합니다.
+4. PowerShell에서 이 폴더로 이동해 `.\deploy-supabase.ps1`을 실행합니다. 프로젝트 reference는 기본값으로 현재 프로젝트를 사용합니다. 저장소 밖에서 실행해도 스크립트가 저장소의 파일을 찾으며, SQL 마이그레이션을 적용하고 Edge Function을 JWT 검증 없이 배포합니다. 함수가 공개 API 키를 확인하고 데이터베이스의 사용량 제한을 적용합니다.
 5. Google AI Studio에서 새 Gemini 키를 발급하고, 스크립트의 숨김 입력란에 입력합니다. 키는 Supabase secret `GEMINI_API_KEY`로 설정되며 임시 파일은 작업 후 삭제됩니다. Gemini 키는 채팅·HTML·저장소에 넣지 마세요.
 6. 스크립트가 Supabase의 공개 URL과 publishable 키를 GitHub Actions 변수로 등록해 Pages 배포를 시작합니다. 배포 후 [공개 사이트](https://mieunjung.github.io/ai-contents-designer/)의 네 가지 만들기 화면에 Gemini 연결 완료가 표시됩니다.
 
