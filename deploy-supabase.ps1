@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 $repo = "mieunjung/ai-contents-designer"
 $siteUrl = "https://mieunjung.github.io/ai-contents-designer/"
+$defaultProjectRef = "yvpalquguzqupvzcavni"
 
 function Invoke-SupabaseCli {
   & npx.cmd --yes supabase@latest @args
@@ -16,7 +17,20 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
   throw "Install GitHub CLI and sign in with 'gh auth login' before deploying."
 }
 
-$projectRef = Read-Host "Supabase project reference (Project Settings > General)"
+$originalAccessToken = $env:SUPABASE_ACCESS_TOKEN
+$accessToken = Read-Host "Supabase Personal Access Token (Dashboard > Account > Access Tokens; input is hidden)" -AsSecureString
+$accessTokenPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($accessToken)
+$plainAccessToken = $null
+
+try {
+  $plainAccessToken = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($accessTokenPointer)
+  if ([string]::IsNullOrWhiteSpace($plainAccessToken)) {
+    throw "A Supabase Personal Access Token is required."
+  }
+  $env:SUPABASE_ACCESS_TOKEN = $plainAccessToken
+
+$projectRefInput = Read-Host "Supabase project reference (Enter accepts $defaultProjectRef)"
+$projectRef = if ([string]::IsNullOrWhiteSpace($projectRefInput)) { $defaultProjectRef } else { $projectRefInput.Trim() }
 if ($projectRef -notmatch '^[a-zA-Z0-9-]{8,40}$') {
   throw "That project reference doesn't look valid."
 }
@@ -86,3 +100,9 @@ Write-Host ""
 Write-Host "Gemini backend is responding. GitHub Pages deployment has started."
 Write-Host "Site: $siteUrl"
 Write-Host "The Supabase URL and anon key are public app configuration; the Gemini key stays on Supabase."
+} finally {
+  $env:SUPABASE_ACCESS_TOKEN = $originalAccessToken
+  $plainAccessToken = $null
+  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($accessTokenPointer)
+  $accessToken.Dispose()
+}
