@@ -182,6 +182,7 @@
     공개 페이지에서는 예시 체험을 사용할 수 있어요. Gemini 실생성에는 별도 서버 연결이 필요하며, 영상·그림은 체험용 예시입니다.
   </footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./supabase-config.js"></script>
   <script>
     (() => {
       const fields = {
@@ -237,6 +238,9 @@
       ];
       const app = document.getElementById("app");
       const toast = document.getElementById("toast");
+      const supabaseConfig = window.AI_CONTENTS_CONFIG || {};
+      const supabaseUrl = typeof supabaseConfig.url === "string" ? supabaseConfig.url.replace(/\/+$/, "") : "";
+      const supabaseAnonKey = typeof supabaseConfig.anonKey === "string" ? supabaseConfig.anonKey : "";
       let activeField = null;
       let currentPreview = null;
       let activeFilter = "all";
@@ -380,6 +384,23 @@
       }
       async function checkApiStatus(key) {
         const status = document.getElementById("apiStatus");
+        if (supabaseUrl && supabaseAnonKey) {
+          try {
+            const response = await fetch(`${supabaseUrl}/functions/v1/ai-generate`, {
+              headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` }
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.configured) throw new Error(data.error || "Gemini 키가 설정되지 않았어요.");
+            apiAvailable.add(key);
+            status.className = "api-status ready";
+            status.textContent = "✅ Gemini Flash-Lite 연결 완료 · 아이디어를 실제로 만들어요.";
+          } catch (error) {
+            apiAvailable.delete(key);
+            status.className = "api-status error";
+            status.textContent = `⚠️ Gemini 백엔드 연결 실패: ${error.message}`;
+          }
+          return;
+        }
         try {
           const response = await fetch("/api/status");
           if (!response.ok) throw new Error("Gemini 서버에 연결할 수 없어요.");
@@ -402,13 +423,23 @@
       async function generateWithGemini(category, idea) {
         let response;
         try {
-          response = await fetch("/api/generate", {
+          response = await fetch(supabaseUrl && supabaseAnonKey
+            ? `${supabaseUrl}/functions/v1/ai-generate`
+            : "/api/generate", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...(supabaseUrl && supabaseAnonKey ? {
+                apikey: supabaseAnonKey,
+                Authorization: `Bearer ${supabaseAnonKey}`
+              } : {})
+            },
             body: JSON.stringify({ category, idea })
           });
         } catch (error) {
-          throw new Error("Gemini 서버에 연결할 수 없어요. start.ps1로 사이트를 실행했는지 확인해 주세요.");
+          throw new Error(supabaseUrl
+            ? "Supabase Gemini 서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요."
+            : "Gemini 서버에 연결할 수 없어요. start.ps1로 사이트를 실행했는지 확인해 주세요.");
         }
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "작품 생성에 실패했어요. 잠시 후 다시 시도해 주세요.");

@@ -7,6 +7,7 @@ const port = Number(process.env.PORT) || 4173;
 const apiKey = process.env.GEMINI_API_KEY;
 const model = "gemini-2.5-flash-lite";
 const pagePath = fileURLToPath(new URL("./index.html", import.meta.url));
+const publicConfigPath = fileURLToPath(new URL("./supabase-config.js", import.meta.url));
 const requestsByAddress = new Map();
 const requestLimit = 12;
 const rateWindowMs = 60_000;
@@ -184,6 +185,20 @@ const server = createServer(async (request, response) => {
     } catch (error) {
       console.error("페이지 파일을 읽지 못했습니다.", error);
       return sendJson(response, 500, { error: "페이지 파일을 읽지 못했습니다." });
+    }
+  }
+  if (request.method === "GET" && pathname === "/supabase-config.js") {
+    try {
+      const script = await readFile(publicConfigPath);
+      response.writeHead(200, {
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff"
+      });
+      return response.end(script);
+    } catch (error) {
+      console.error("Supabase 공개 설정 파일을 읽지 못했습니다.", error);
+      return sendJson(response, 500, { error: "Supabase 공개 설정 파일을 읽지 못했습니다." });
     }
   }
   return sendJson(response, 404, { error: "요청한 주소를 찾을 수 없습니다." });
