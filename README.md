@@ -1,6 +1,6 @@
 # AI Contents designer 실행 안내
 
-게임, 노래, 영상 스토리보드, 그림 설계에 Google이 가격 대비 성능이 좋다고 안내하는 **Gemini 2.5 Flash** 모델을 사용합니다. Flash-Lite보다 더 풍부한 창작 결과를 목표로 합니다. 입력과 출력은 필요한 분량으로 제한합니다. Gemini API 키는 브라우저가 아닌 내 컴퓨터의 로컬 서버에서만 사용합니다. Google AI Studio에서 발급한 키를 채팅이나 웹페이지에 붙여 넣지 마세요.
+앱 안에서 게임·노래·영상 스토리보드·그림 초안을 만들 때 **Gemini 2.5 Flash**를 사용합니다. 각 만들기 화면에서 그림은 [Genspark](https://www.genspark.ai/), 영상은 [Canva](https://www.canva.com/), 노래는 [Suno](https://suno.com/), 게임은 [Gemini](https://gemini.google.com/)를 새 탭으로 열고, 해당 서비스에 붙여 넣을 주문서를 복사할 수 있습니다. 외부 서비스는 별도 계정이나 로그인, 사용량 제한이 있을 수 있으며 무료 제공 범위는 각 서비스의 현재 정책을 확인하세요. 입력과 출력은 필요한 분량으로 제한합니다. Gemini API 키는 브라우저가 아닌 내 컴퓨터의 로컬 서버에서만 사용합니다. Google AI Studio에서 발급한 키를 채팅이나 웹페이지에 붙여 넣지 마세요.
 
 ## 처음 한 번 준비하기
 
