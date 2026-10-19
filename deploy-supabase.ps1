@@ -43,10 +43,9 @@ if ((@($projects) -join "`n") -notmatch [regex]::Escape($projectRef)) {
 }
 
 $apiKeys = Invoke-SupabaseCli projects api-keys --project-ref $projectRef --output json | ConvertFrom-Json
-$anonKey = @($apiKeys | Where-Object { $_.type -eq "legacy" -and $_.name -eq "anon" })[0].api_key
 $publishableKey = @($apiKeys | Where-Object { $_.type -eq "publishable" })[0].api_key
-if ($anonKey -notmatch '^eyJ' -or $publishableKey -notmatch '^sb_publishable_') {
-  throw "The project's legacy anon and publishable public API keys could not be identified."
+if ($publishableKey -notmatch '^sb_publishable_') {
+  throw "The project's publishable API key could not be identified."
 }
 
 Invoke-SupabaseCli db push --project-ref $projectRef --yes
@@ -63,7 +62,7 @@ try {
     throw "A Gemini API key is required."
   }
 
-  Invoke-SupabaseCli functions deploy ai-generate --project-ref $projectRef --use-api
+  Invoke-SupabaseCli functions deploy ai-generate --project-ref $projectRef --use-api --no-verify-jwt
   [IO.File]::WriteAllText($temporaryEnv, "GEMINI_API_KEY=$plainKey", [Text.UTF8Encoding]::new($false))
   Invoke-SupabaseCli secrets set --project-ref $projectRef --env-file $temporaryEnv
 } finally {
@@ -77,20 +76,19 @@ try {
 
 $headers = @{
   apikey = $publishableKey
-  Authorization = "Bearer $anonKey"
+  Authorization = "Bearer $publishableKey"
 }
-$headers.Authorization = "Bearer $anonKey"
+$headers.Authorization = "Bearer $publishableKey"
 $health = Invoke-RestMethod -Uri "$projectUrl/functions/v1/ai-generate" -Headers $headers
 if (-not $health.configured) {
   throw "The function is deployed, but it did not report a configured Gemini key."
 }
 
 Invoke-GitHubCli variable set SUPABASE_URL --repo $repo --body $projectUrl
-Invoke-GitHubCli variable set SUPABASE_ANON_KEY --repo $repo --body $anonKey
 Invoke-GitHubCli variable set SUPABASE_PUBLISHABLE_KEY --repo $repo --body $publishableKey
 Invoke-GitHubCli workflow run "Deploy AI Contents designer" --repo $repo
 
 Write-Host ""
 Write-Host "Gemini backend is responding. GitHub Pages deployment has started."
 Write-Host "Site: $siteUrl"
-Write-Host "The Supabase URL, anon JWT, and publishable key are public app configuration; the Gemini key stays on Supabase."
+Write-Host "The Supabase URL and publishable key are public app configuration; the Gemini key stays on Supabase."

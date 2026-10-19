@@ -244,7 +244,6 @@
       const toast = document.getElementById("toast");
       const supabaseConfig = window.AI_CONTENTS_CONFIG || {};
       const supabaseUrl = typeof supabaseConfig.url === "string" ? supabaseConfig.url.replace(/\/+$/, "") : "";
-      const supabaseAnonKey = typeof supabaseConfig.anonKey === "string" ? supabaseConfig.anonKey : "";
       const supabasePublishableKey = typeof supabaseConfig.publishableKey === "string" ? supabaseConfig.publishableKey : "";
       let activeField = null;
       let currentPreview = null;
@@ -395,10 +394,10 @@
       }
       async function checkApiStatus(key) {
         const status = document.getElementById("apiStatus");
-        if (supabaseUrl && supabaseAnonKey && supabasePublishableKey) {
+        if (supabaseUrl && supabasePublishableKey) {
           try {
             const response = await fetch(`${supabaseUrl}/functions/v1/ai-generate`, {
-              headers: { apikey: supabasePublishableKey, Authorization: `Bearer ${supabaseAnonKey}` }
+              headers: { apikey: supabasePublishableKey, Authorization: `Bearer ${supabasePublishableKey}` }
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.configured) throw new Error(data.error || "Gemini 키가 설정되지 않았어요.");
@@ -434,15 +433,15 @@
       async function generateWithGemini(category, idea) {
         let response;
         try {
-          response = await fetch(supabaseUrl && supabaseAnonKey && supabasePublishableKey
+          response = await fetch(supabaseUrl && supabasePublishableKey
             ? `${supabaseUrl}/functions/v1/ai-generate`
             : "/api/generate", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              ...(supabaseUrl && supabaseAnonKey && supabasePublishableKey ? {
+              ...(supabaseUrl && supabasePublishableKey ? {
                 apikey: supabasePublishableKey,
-                Authorization: `Bearer ${supabaseAnonKey}`
+                Authorization: `Bearer ${supabasePublishableKey}`
               } : {})
             },
             body: JSON.stringify({ category, idea })

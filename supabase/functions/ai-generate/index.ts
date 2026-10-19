@@ -223,7 +223,7 @@ Deno.serve(async (request) => {
   }
   if (request.method === "OPTIONS") return jsonResponse({ ok: true }, 200, origin);
 
-  const publicKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY");
+  const publicKey = Deno.env.get("SUPABASE_ANON_KEY");
   const requestKey = request.headers.get("apikey");
   if (!publicKey || !requestKey || requestKey !== publicKey) {
     return jsonResponse({ error: "Supabase 공개 API 키 인증에 실패했습니다." }, 401, origin);
