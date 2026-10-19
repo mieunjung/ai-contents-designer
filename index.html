@@ -129,6 +129,10 @@
     .preview-head strong { font-size: 13px; }.demo-label { color: #8063e8; font-size: 10px; font-weight: 900; }
     .preview-output { color: #5f6b80; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
     .preview-visual { margin: 10px 0; min-height: 80px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(120deg,#e9f8f4,#f0eaff); font-size: 35px; }
+    .artwork-preview, .video-preview { display: block; width: 100%; margin: 10px 0; border: 1px solid var(--line); border-radius: 14px; background: white; }
+    .video-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 9px 0; }
+    .video-controls button, .video-controls a { border: 0; border-radius: 999px; padding: 9px 13px; background: #8063e8; color: white; text-decoration: none; font-size: 12px; font-weight: 900; }
+    .video-controls a { background: #e9e4fb; color: #6752b3; }
     .api-status { display: flex; gap: 8px; align-items: flex-start; margin: 14px 0; padding: 11px 13px; border-radius: 13px; background: #f3f5fa; color: #68758b; font-size: 12px; line-height: 1.55; }
     .api-status.ready { background: #eaf8f1; color: #347b61; }.api-status.error { background: #fff0ed; color: #b65349; }
     .loading-dots { display: inline-block; animation: loading-pulse 1s infinite alternate; }
@@ -179,7 +183,7 @@
   <main class="shell" id="app"></main>
   <footer class="shell">
     <strong>AI Contents designer</strong> · 아이디어는 내가, 멋진 상상은 함께!<br>
-    공개 페이지에서는 예시 체험을 사용할 수 있어요. Gemini 실생성에는 별도 서버 연결이 필요하며, 영상·그림은 체험용 예시입니다.
+    게임·노래·영상 스토리보드·그림은 Gemini가 아이디어를 바탕으로 생성해요. 그림은 SVG, 영상은 브라우저 애니메이션으로 만들어져요.
   </footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./supabase-config.js"></script>
@@ -245,6 +249,10 @@
       let currentPreview = null;
       let activeFilter = "all";
       const apiAvailable = new Set();
+      let videoAnimationFrame = 0;
+      let videoRecorder = null;
+      let videoRecordingTimer = 0;
+      let cancelVideoDownload = false;
 
       function getPosts() {
         try {
@@ -271,12 +279,17 @@
       function escapeHtml(value) {
         return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
       }
+      function escapeXml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[char]);
+      }
       function showToast(message) {
         toast.textContent = message;
         toast.classList.add("show");
         window.setTimeout(() => toast.classList.remove("show"), 2300);
       }
       function renderHome(shouldScroll = false) {
+        cancelAnimationFrame(videoAnimationFrame);
+        stopVideoRecording();
         activeField = null;
         currentPreview = null;
         app.innerHTML = `
@@ -345,8 +358,8 @@
             </aside>
             <section class="studio-panel" aria-labelledby="studio-title">
               <h2 id="studio-title">${field.button}</h2>
-              <p class="intro">${key === "game" || key === "song" ? (location.hostname.endsWith("github.io") || location.protocol === "file:" ? "공개 HTML 데모에서는 내 아이디어로 예시 작품을 만들어요. Gemini 실생성은 서버 연결 후 사용할 수 있어요." : "내 아이디어를 적으면 Gemini가 작품 내용을 만들어줘요. 아이디어를 바탕으로 직접 고쳐도 좋아요!") : "멋진 작품의 제목과 아이디어를 적어주세요. 이 분야는 예시를 만드는 체험이에요."}</p>
-              ${key === "game" || key === "song" ? '<div class="api-status" id="apiStatus" role="status">Gemini 연결 상태를 확인하고 있어요<span class="loading-dots">…</span></div>' : ""}
+              <p class="intro">내 아이디어를 적으면 Gemini가 작품을 만들어요. 영상은 장면 애니메이션으로 재생·저장하고, 그림은 이미지 파일로 내려받을 수 있어요.</p>
+              <div class="api-status" id="apiStatus" role="status">Gemini 연결 상태를 확인하고 있어요<span class="loading-dots">…</span></div>
               <form id="createForm">
                 <div class="field"><label for="workTitle">작품 제목</label><input id="workTitle" maxlength="50" required placeholder="예: 반짝별 탐험대"></div>
                 <div class="field"><label for="ideaInput">내 아이디어</label><textarea id="ideaInput" maxlength="240" required>${escapeHtml(field.prompt)}</textarea><div class="prompt-hint">${field.hint} (최대 240자)</div></div>
@@ -357,7 +370,7 @@
           </div>
         </section>`;
         document.getElementById("backButton").addEventListener("click", () => renderHome());
-        if (key === "game" || key === "song") checkApiStatus(key);
+        checkApiStatus(key);
         document.getElementById("createForm").addEventListener("submit", async (event) => {
           event.preventDefault();
           const title = document.getElementById("workTitle").value.trim();
@@ -367,12 +380,9 @@
           submitButton.disabled = true;
           submitButton.textContent = "✨ 만들고 있어요…";
           try {
-            if ((key === "game" || key === "song") && apiAvailable.has(key)) {
-              const result = await generateWithGemini(key, idea);
-              currentPreview = { key, title, idea, result, generated: true, content: formatGeneratedWork(key, result) };
-            } else {
-              currentPreview = { key, title, idea, generated: false, content: field.output(idea) };
-            }
+            if (!apiAvailable.has(key)) throw new Error("Gemini 연결을 확인할 수 없어요. 잠시 후 다시 시도해 주세요.");
+            const result = await generateWithGemini(key, idea);
+            currentPreview = { key, title, idea, result, generated: true, content: formatGeneratedWork(key, result) };
           } catch (error) {
             showToast(error.message);
             submitButton.disabled = false;
@@ -393,7 +403,7 @@
             if (!response.ok || !data.configured) throw new Error(data.error || "Gemini 키가 설정되지 않았어요.");
             apiAvailable.add(key);
             status.className = "api-status ready";
-            status.textContent = "✅ Gemini Flash-Lite 연결 완료 · 아이디어를 실제로 만들어요.";
+            status.textContent = "✅ Gemini 2.5 Flash 연결 완료 · 네 가지 작품을 생성할 수 있어요.";
           } catch (error) {
             apiAvailable.delete(key);
             status.className = "api-status error";
@@ -408,12 +418,12 @@
           if (!data.configured) throw new Error("Gemini API 키가 아직 설정되지 않았어요.");
           apiAvailable.add(key);
           status.className = "api-status ready";
-          status.textContent = "✅ Gemini 2.5 Flash-Lite 연결 준비 완료 · 짧은 텍스트를 생성해요.";
+          status.textContent = "✅ Gemini 2.5 Flash 연결 완료 · 네 가지 작품을 생성할 수 있어요.";
         } catch {
           apiAvailable.delete(key);
           status.className = "api-status";
           if (location.protocol === "file:" || location.hostname.endsWith("github.io")) {
-            status.textContent = "ℹ️ 공개 HTML 체험 모드예요. 아래에서 예시 작품을 만들 수 있고, Gemini 실생성은 서버 연결 후 사용할 수 있어요.";
+            status.textContent = "ℹ️ Gemini 서버 연결이 필요해요. README 안내에 따라 서버를 설정해 주세요.";
             return;
           }
           status.className = "api-status error";
@@ -449,15 +459,26 @@
         if (key === "game") {
           return `🎮 ${result.title}\n${result.story}\n\n목표: ${result.goal}\n주인공: ${result.heroEmoji}　모을 것: ${result.collectibleEmoji}　조심할 것: ${result.obstacleEmoji}\n\n아래에서 직접 별을 모아 플레이해 보세요!`;
         }
-        return `🎵 ${result.mood} 노래 · ${result.bpm} BPM\n\n${result.lyrics.join("\n")}\n\n(후렴)\n${result.chorus}\n\n아래 재생 버튼을 누르면 만든 멜로디를 들어볼 수 있어요.`;
+        if (key === "song") return `🎵 ${result.mood} 노래 · ${result.bpm} BPM\n\n${result.lyrics.join("\n")}\n\n(후렴)\n${result.chorus}\n\n아래 재생 버튼을 누르면 만든 멜로디를 들어볼 수 있어요.`;
+        if (key === "video") return `🎬 ${result.logline}\n\n${result.scenes.map((scene, index) => `장면 ${index + 1} · ${scene.setting}\n${scene.action}\n내레이션: ${scene.narration}`).join("\n\n")}\n\n아래 미리보기에서 장면 애니메이션을 재생하고 영상 파일로 저장할 수 있어요.`;
+        return `🎨 ${result.description}\n\n주인공: ${result.subjectEmoji}\n장식: ${result.details.join(", ")}\n\n아래 그림을 SVG 파일로 내려받을 수 있어요.`;
       }
       function renderPreview() {
         const field = fields[currentPreview.key];
         const box = document.getElementById("previewBox");
         box.hidden = false;
-        let demo = field.demo === "game" && currentPreview.result
-          ? `<div class="preview-visual" aria-label="게임 주인공과 아이템">${escapeHtml(currentPreview.result.heroEmoji)}　${escapeHtml(currentPreview.result.collectibleEmoji)}　${escapeHtml(currentPreview.result.obstacleEmoji)}</div>`
-          : `<div class="preview-visual" aria-label="작품 아이디어 미리보기">${field.visual}</div>`;
+        cancelAnimationFrame(videoAnimationFrame);
+        let demo = "";
+        if (field.demo === "game") {
+          demo = `<div class="preview-visual" aria-label="게임 주인공과 아이템">${escapeHtml(currentPreview.result.heroEmoji)}　${escapeHtml(currentPreview.result.collectibleEmoji)}　${escapeHtml(currentPreview.result.obstacleEmoji)}</div>`;
+        } else if (field.demo === "video") {
+          demo = `<canvas class="video-preview" id="videoCanvas" width="640" height="360" aria-label="AI가 만든 영상 장면 미리보기"></canvas><div class="video-controls"><button id="downloadVideo" type="button">🎬 영상 파일 만들기</button><a id="downloadVideoLink" hidden>영상 다운로드</a></div>`;
+        } else if (field.demo === "art") {
+          const artwork = artworkDataUrl(currentPreview.result, currentPreview.title);
+          demo = `<img class="artwork-preview" src="${artwork}" alt="${escapeHtml(currentPreview.title)} AI 그림"><div class="video-controls"><a href="${artwork}" download="${escapeHtml(currentPreview.title)}.svg">🖼️ 그림 다운로드 (SVG)</a></div>`;
+        } else {
+          demo = `<div class="preview-visual" aria-label="작품 아이디어 미리보기">${field.visual}</div>`;
+        }
         if (field.demo === "game") demo += `<div class="game-demo"><button id="collectStar" type="button">${currentPreview.result ? escapeHtml(currentPreview.result.collectibleEmoji) : "⭐"} 모으기!</button><span class="game-score" id="gameScore">${currentPreview.result ? `주인공 ${escapeHtml(currentPreview.result.heroEmoji)} · 목표 ${escapeHtml(currentPreview.result.goal)}` : "별을 모아봐!"}<br>모은 아이템 0개</span></div>`;
         if (field.demo === "song") demo += `<div class="audio-demo"><span>🎼 ${currentPreview.result ? `${escapeHtml(currentPreview.result.mood)} 멜로디 · ${escapeHtml(currentPreview.result.bpm)} BPM` : "브라우저 음성으로 미리 듣기"}</span><button id="playSong" type="button">▶ 들어보기</button></div>`;
         box.innerHTML = `<div class="preview-head"><strong>✨ ${escapeHtml(currentPreview.title)} 미리보기</strong><span class="demo-label">${currentPreview.generated ? "Gemini 생성" : "예시 체험"}</span></div>${demo}<div class="preview-output">${escapeHtml(currentPreview.content)}</div><div class="preview-actions"><button id="postWork" type="button">📌 게시판에 올리기</button><button id="editWork" type="button">✏️ 다시 만들기</button></div>`;
@@ -482,6 +503,10 @@
             playGeneratedMelody(currentPreview.result);
           });
         }
+        if (field.demo === "video") {
+          startVideoPreview();
+          document.getElementById("downloadVideo").addEventListener("click", createVideoDownload);
+        }
         document.getElementById("postWork").addEventListener("click", () => {
           const post = { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, category: currentPreview.key, title: currentPreview.title, content: currentPreview.content, date: new Date().toLocaleDateString("ko-KR") };
           if (!savePost(post)) return;
@@ -490,6 +515,8 @@
           showToast("작품을 게시판에 올렸어요! 멋져요 🎉");
         });
         document.getElementById("editWork").addEventListener("click", () => {
+          cancelAnimationFrame(videoAnimationFrame);
+          stopVideoRecording();
           const submitButton = document.querySelector('#createForm button[type="submit"]');
           submitButton.disabled = false;
           submitButton.textContent = field.button;
@@ -498,6 +525,146 @@
           currentPreview = null;
         });
         box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      const videoPalettes = {
+        ocean: ["#b8e7f5", "#4a9bb8"], sunset: ["#ffd3a8", "#e87c83"], forest: ["#cce8c5", "#5d9b72"],
+        space: ["#d8c9ff", "#8063c9"], candy: ["#ffd5e5", "#e783b1"], sunny: ["#fff0a8", "#e7a93c"]
+      };
+      const subjectColors = { coral: "#ff8b79", gold: "#f2c14e", mint: "#69c6a5", violet: "#9575cd", blue: "#64a9e8", pink: "#ec8bb5" };
+      function artworkDataUrl(art, title) {
+        const [background, accent] = videoPalettes[art.background] || videoPalettes.sunset;
+        const subject = subjectColors[art.subjectColor] || subjectColors.violet;
+        const detail = subjectColors[art.accentColor] || subjectColors.gold;
+        const decorations = art.details.map((item, index) => {
+          const x = 100 + (index * 137) % 440;
+          const y = 95 + (index * 89) % 180;
+          return `<circle cx="${x}" cy="${y}" r="18" fill="${detail}" opacity=".76"/><text x="${x}" y="${y + 7}" text-anchor="middle" font-size="17">${escapeXml(item.slice(0, 6))}</text>`;
+        }).join("");
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="440" viewBox="0 0 640 440"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="${background}"/><stop offset="1" stop-color="${accent}"/></linearGradient></defs><rect width="640" height="440" rx="32" fill="url(#bg)"/><circle cx="320" cy="215" r="112" fill="${subject}" opacity=".88"/><circle cx="320" cy="215" r="92" fill="#fff" opacity=".3"/>${decorations}<text x="320" y="250" text-anchor="middle" font-size="96">${escapeXml(art.subjectEmoji)}</text><rect x="28" y="350" width="584" height="62" rx="20" fill="#fff" opacity=".86"/><text x="320" y="378" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="700" fill="#25324a">${escapeXml(title.slice(0, 35))}</text><text x="320" y="400" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#596579">${escapeXml(art.description.slice(0, 52))}</text></svg>`;
+        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      }
+      function paintVideoFrame(canvas, video, title, elapsed) {
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("영상 미리보기를 그릴 수 없습니다.");
+        const scenes = video.scenes;
+        const sceneDuration = 2200;
+        const sceneIndex = Math.floor(elapsed / sceneDuration) % scenes.length;
+        const scene = scenes[sceneIndex];
+        const [from, to] = videoPalettes[scene.palette] || videoPalettes.ocean;
+        const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, from);
+        gradient.addColorStop(1, to);
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "rgba(255,255,255,.32)";
+        for (let index = 0; index < 7; index += 1) {
+          const x = ((index * 113 + elapsed * (0.012 + index * 0.001)) % (canvas.width + 70)) - 35;
+          const y = 44 + (index * 47) % 240;
+          context.beginPath();
+          context.arc(x, y, 16 + index % 3 * 7, 0, Math.PI * 2);
+          context.fill();
+        }
+        context.textAlign = "center";
+        context.fillStyle = "#25324a";
+        context.font = "700 23px sans-serif";
+        context.fillText(`${sceneIndex + 1} / ${scenes.length} · ${scene.setting}`, canvas.width / 2, 42, 580);
+        context.font = "112px sans-serif";
+        context.fillText(scene.emoji, canvas.width / 2, 205 + Math.sin(elapsed / 230) * 9);
+        context.font = "600 19px sans-serif";
+        context.fillText(scene.action, canvas.width / 2, 255, 580);
+        context.fillStyle = "rgba(255,255,255,.9)";
+        context.fillRect(28, 294, canvas.width - 56, 46);
+        context.fillStyle = "#25324a";
+        context.font = "16px sans-serif";
+        context.fillText(scene.narration, canvas.width / 2, 323, 560);
+        context.font = "700 16px sans-serif";
+        context.fillText(title.slice(0, 40), canvas.width / 2, 380, 580);
+      }
+      function startVideoPreview() {
+        const canvas = document.getElementById("videoCanvas");
+        if (!canvas || !currentPreview) return;
+        const startedAt = performance.now();
+        const animate = (now) => {
+          if (!canvas.isConnected || !currentPreview) return;
+          paintVideoFrame(canvas, currentPreview.result, currentPreview.title, now - startedAt);
+          videoAnimationFrame = requestAnimationFrame(animate);
+        };
+        videoAnimationFrame = requestAnimationFrame(animate);
+      }
+      function stopVideoRecording() {
+        window.clearTimeout(videoRecordingTimer);
+        cancelVideoDownload = true;
+        if (videoRecorder && videoRecorder.state !== "inactive") {
+          videoRecorder.stop();
+        }
+        videoRecorder = null;
+      }
+      function createVideoDownload() {
+        if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+          showToast("이 브라우저는 영상 파일 저장을 지원하지 않아요. 다른 최신 브라우저에서 시도해 주세요.");
+          return;
+        }
+        const canvas = document.getElementById("videoCanvas");
+        if (!canvas) return;
+        cancelAnimationFrame(videoAnimationFrame);
+        const stream = canvas.captureStream(12);
+        const mimeType = typeof MediaRecorder.isTypeSupported === "function"
+          ? ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((type) => MediaRecorder.isTypeSupported(type))
+          : "";
+        try {
+          videoRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+        } catch (error) {
+          stream.getTracks().forEach((track) => track.stop());
+          console.error("영상 녹화를 시작하지 못했습니다.", error);
+          showToast("영상 저장을 시작할 수 없어요. 브라우저 설정을 확인해 주세요.");
+          return;
+        }
+        cancelVideoDownload = false;
+        const chunks = [];
+        const button = document.getElementById("downloadVideo");
+        button.disabled = true;
+        button.textContent = "⏳ 영상을 만들고 있어요…";
+        videoRecorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+        videoRecorder.onerror = (event) => {
+          console.error("영상 녹화 중 오류가 발생했습니다.", event.error);
+          showToast("영상 파일을 만들지 못했어요. 다시 시도해 주세요.");
+        };
+        videoRecorder.onstop = () => {
+          stream.getTracks().forEach((track) => track.stop());
+          button.disabled = false;
+          button.textContent = "🎬 다시 만들기";
+          if (cancelVideoDownload) return;
+          const blob = new Blob(chunks, { type: videoRecorder?.mimeType || "video/webm" });
+          if (!blob.size) return showToast("영상 파일이 비어 있어요. 다시 시도해 주세요.");
+          const url = URL.createObjectURL(blob);
+          const link = document.getElementById("downloadVideoLink");
+          if (link) {
+            link.href = url;
+            link.download = `${currentPreview.title.replace(/[\\/:*?"<>|]/g, "-")}.webm`;
+            link.hidden = false;
+            link.textContent = "⬇️ 영상 다운로드 (WebM)";
+            link.click();
+          } else {
+            const download = document.createElement("a");
+            download.href = url;
+            download.download = "ai-contents-video.webm";
+            download.click();
+          }
+          window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+          showToast("AI 장면으로 영상 파일을 만들었어요!");
+          startVideoPreview();
+        };
+        videoRecorder.start();
+        const startedAt = performance.now();
+        const renderRecording = (now) => {
+          if (!canvas.isConnected || !currentPreview || !videoRecorder || videoRecorder.state !== "recording") return;
+          paintVideoFrame(canvas, currentPreview.result, currentPreview.title, now - startedAt);
+          videoAnimationFrame = requestAnimationFrame(renderRecording);
+        };
+        videoAnimationFrame = requestAnimationFrame(renderRecording);
+        videoRecordingTimer = window.setTimeout(() => {
+          if (videoRecorder && videoRecorder.state === "recording") videoRecorder.stop();
+        }, currentPreview.result.scenes.length * 2200);
       }
       function playGeneratedMelody(song) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
