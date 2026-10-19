@@ -1,765 +1,334 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#fffaf0">
-  <title>AI Contents designer</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --ink: #25324a;
-      --muted: #69758a;
-      --paper: #fffdf8;
-      --line: #eee8dc;
-      --purple: #8063e8;
-      --pink: #ff8fa3;
-      --yellow: #ffcb58;
-      --mint: #74d8bc;
-      --blue: #74b8f2;
-      --shadow: 0 16px 45px rgba(59, 54, 91, .10);
-      font-family: "Trebuchet MS", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-width: 320px;
-      background:
-        radial-gradient(ellipse at 8% 6%, rgba(255, 223, 147, .23), transparent 26rem),
-        radial-gradient(ellipse at 95% 12%, rgba(208, 194, 255, .24), transparent 27rem),
-        #fffaf2;
-      color: var(--ink);
-    }
-    button, input, textarea { font: inherit; }
-    button { cursor: pointer; }
-    button:focus-visible, input:focus-visible, textarea:focus-visible {
-      outline: 3px solid rgba(128, 99, 232, .45);
-      outline-offset: 3px;
-    }
-    .shell { width: min(1120px, calc(100% - 40px)); margin: auto; }
-    header { height: 78px; display: flex; align-items: center; justify-content: space-between; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: -.03em; }
-    .brand-bot { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 13px; background: #eee8ff; font-size: 21px; }
-    .nav-actions { display: flex; gap: 9px; }
-    .quiet-button, .back-button {
-      border: 1px solid var(--line); border-radius: 999px; padding: 10px 15px;
-      background: rgba(255,255,255,.76); color: var(--ink); font-weight: 800;
-    }
-    .quiet-button:hover, .back-button:hover { border-color: #c9bdfa; background: white; }
-    main { min-height: calc(100vh - 145px); padding-bottom: 50px; }
-    .hero {
-      position: relative; overflow: hidden; min-height: 340px; margin: 22px 0 34px;
-      display: grid; grid-template-columns: 1.2fr .8fr; align-items: center;
-      padding: 48px 7%; border: 1px solid rgba(255,255,255,.9); border-radius: 34px;
-      background: linear-gradient(115deg, #fff0cc 0%, #fff2f3 48%, #f0eaff 100%);
-      box-shadow: var(--shadow);
-    }
-    .hero::before, .hero::after { content: "✦"; position: absolute; color: #f3b947; opacity: .8; }
-    .hero::before { right: 42%; top: 18%; font-size: 22px; }
-    .hero::after { right: 8%; top: 18%; font-size: 16px; }
-    .eyebrow { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,.75); color: #7856d9; font-size: 12px; font-weight: 900; }
-    h1 { max-width: 570px; margin: 17px 0 13px; font-size: clamp(37px, 6vw, 65px); line-height: .98; letter-spacing: -.065em; }
-    .hero-copy { max-width: 435px; color: #5d6678; font-size: 16px; line-height: 1.75; }
-    .hero-visual { display: grid; place-items: center; min-height: 220px; }
-    .bot-scene { position: relative; width: 220px; height: 205px; display: grid; place-items: center; }
-    .bot-orbit { position: absolute; width: 190px; height: 190px; border: 2px dashed rgba(128,99,232,.25); border-radius: 50%; }
-    .big-bot { z-index: 1; width: 133px; height: 122px; border-radius: 38px 38px 32px 32px; background: linear-gradient(145deg, #a993ff, #8063e8); border: 6px solid #fff; box-shadow: 0 16px 26px rgba(93,71,177,.22); position: relative; transform: rotate(-4deg); }
-    .big-bot::before { content: ""; position: absolute; width: 83px; height: 43px; left: 19px; top: 30px; border-radius: 22px; background: #fff; }
-    .big-bot::after { content: "●   ●"; white-space: pre; position: absolute; color: #6451ad; left: 38px; top: 39px; font-size: 14px; letter-spacing: 5px; }
-    .antenna { position: absolute; width: 7px; height: 23px; left: 62px; top: -24px; background: #8063e8; border-radius: 8px; }
-    .antenna::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #ffcb58; top: -9px; left: -4px; }
-    .cheek { position: absolute; width: 13px; height: 7px; border-radius: 50%; background: #ff9bad; top: 80px; left: 24px; }
-    .cheek.right { left: auto; right: 24px; }
-    .floaty { position: absolute; font-size: 31px; }
-    .floaty.one { top: 8px; left: 1px; }.floaty.two { bottom: 5px; right: 1px; }.floaty.three { top: 31px; right: 8px; font-size: 22px; }
-    .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin: 0 3px 17px; }
-    .section-heading h2 { margin: 0 0 6px; font-size: 25px; letter-spacing: -.04em; }
-    .section-heading p { margin: 0; color: var(--muted); font-size: 14px; }
-    .count-pill { background: #f0eaff; color: #7055d4; padding: 8px 12px; border-radius: 999px; font-weight: 900; font-size: 12px; white-space: nowrap; }
-    .career-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-    .career-card {
-      min-height: 230px; border: 1px solid rgba(255,255,255,.9); border-radius: 25px; padding: 20px;
-      text-align: left; color: var(--ink); box-shadow: 0 9px 26px rgba(59,54,91,.07);
-      transition: transform .2s, box-shadow .2s; position: relative; overflow: hidden;
-    }
-    .career-card:hover { transform: translateY(-5px) rotate(-.5deg); box-shadow: var(--shadow); }
-    .career-card::after { content: ""; position: absolute; width: 130px; height: 130px; border-radius: 50%; right: -37px; top: -40px; background: rgba(255,255,255,.35); }
-    .career-card.game { background: #e7f7ef; }.career-card.video { background: #fff0ed; }
-    .career-card.song { background: #fff4d9; }.career-card.art { background: #eeeaff; }
-    .card-icon { width: 68px; height: 68px; display: grid; place-items: center; border-radius: 22px; background: rgba(255,255,255,.75); font-size: 36px; margin-bottom: 19px; }
-    .card-title { display: block; font-size: 19px; font-weight: 900; margin-bottom: 6px; letter-spacing: -.04em; }
-    .card-description { color: #69758a; font-size: 12px; line-height: 1.55; }
-    .card-provider { display: inline-block; margin-top: 9px; padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,.7); color: #6854b1; font-size: 10px; font-weight: 900; }
-    .card-arrow { position: absolute; right: 19px; bottom: 17px; font-weight: 900; color: #7862c7; }
-    .board-section { margin-top: 55px; }
-    .board-tools { display: flex; gap: 8px; }
-    .filter-button { border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; background: #fff; color: var(--muted); font-weight: 800; font-size: 12px; }
-    .filter-button.active { background: var(--ink); color: white; border-color: var(--ink); }
-    .board-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .post-card { min-height: 185px; padding: 18px; background: var(--paper); border: 1px solid var(--line); border-radius: 21px; box-shadow: 0 7px 20px rgba(59,54,91,.045); }
-    .post-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .post-category { border-radius: 999px; padding: 6px 9px; background: #f0eaff; color: #7157cc; font-size: 11px; font-weight: 900; }
-    .post-card[data-category="game"] .post-category { background: #e7f7ef; color: #39896c; }
-    .post-card[data-category="video"] .post-category { background: #fff0ed; color: #dc7168; }
-    .post-card[data-category="song"] .post-category { background: #fff4d9; color: #a47a20; }
-    .post-date { color: #9ba3af; font-size: 11px; }
-    .post-card h3 { margin: 14px 0 7px; font-size: 17px; }
-    .post-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .empty-board { grid-column: 1/-1; text-align: center; padding: 35px; color: var(--muted); border: 1px dashed #ded7ca; border-radius: 20px; background: rgba(255,255,255,.5); }
-    .detail-page { padding-top: 22px; }
-    .detail-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-    .detail-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: 20px; align-items: start; }
-    .info-panel, .studio-panel { border-radius: 28px; border: 1px solid rgba(255,255,255,.95); box-shadow: var(--shadow); background: white; padding: clamp(21px, 4vw, 34px); }
-    .info-panel { position: sticky; top: 18px; }
-    .field-badge { font-size: 52px; margin-bottom: 10px; }
-    .info-panel h2 { margin: 0 0 10px; font-size: clamp(27px, 4vw, 38px); letter-spacing: -.055em; }
-    .info-panel > p { color: var(--muted); line-height: 1.75; }
-    .job-box { margin-top: 22px; padding: 18px; border-radius: 19px; background: #f7f4ff; }
-    .job-box h3 { margin: 0 0 8px; font-size: 14px; }.job-box p { margin: 0; font-size: 13px; color: #657086; line-height: 1.7; }
-    .sparkle-note { margin-top: 15px; color: #735bc7; font-size: 12px; font-weight: 800; line-height: 1.65; }
-    .studio-panel h2 { margin: 0 0 5px; font-size: 23px; }.studio-panel .intro { margin: 0 0 22px; color: var(--muted); font-size: 13px; line-height: 1.6; }
-    .field { display: block; margin: 15px 0; }
-    .field label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 900; }
-    .field input, .field textarea { width: 100%; padding: 12px 14px; border-radius: 13px; border: 1px solid #e9e5de; background: #fffdfa; color: var(--ink); }
-    .field textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
-    .prompt-hint { margin-top: 6px; color: #8992a1; font-size: 11px; }
-    .primary-button { width: 100%; border: 0; border-radius: 14px; padding: 14px 16px; color: white; background: linear-gradient(100deg, #8063e8, #a184ee); font-weight: 900; box-shadow: 0 7px 16px rgba(128,99,232,.22); }
-    .primary-button:hover { filter: brightness(1.05); }
-    .preview-box { margin-top: 18px; padding: 17px; border: 1px dashed #d9d1f5; border-radius: 18px; background: #faf8ff; }
-    .preview-box[hidden] { display: none; }.preview-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 10px; }
-    .preview-head strong { font-size: 13px; }.demo-label { color: #8063e8; font-size: 10px; font-weight: 900; }
-    .preview-output { color: #5f6b80; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .preview-visual { margin: 10px 0; min-height: 80px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(120deg,#e9f8f4,#f0eaff); font-size: 35px; }
-    .artwork-preview, .video-preview { display: block; width: 100%; margin: 10px 0; border: 1px solid var(--line); border-radius: 14px; background: white; }
-    .video-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 9px 0; }
-    .video-controls button, .video-controls a { border: 0; border-radius: 999px; padding: 9px 13px; background: #8063e8; color: white; text-decoration: none; font-size: 12px; font-weight: 900; }
-    .video-controls a { background: #e9e4fb; color: #6752b3; }
-    .api-status { display: flex; gap: 8px; align-items: flex-start; margin: 14px 0; padding: 11px 13px; border-radius: 13px; background: #f3f5fa; color: #68758b; font-size: 12px; line-height: 1.55; }
-    .api-status.ready { background: #eaf8f1; color: #347b61; }.api-status.error { background: #fff0ed; color: #b65349; }
-    .provider-panel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0; padding: 14px; border: 1px solid #e8e2fb; border-radius: 15px; background: #faf8ff; }
-    .provider-copy { min-width: 180px; flex: 1; }.provider-copy strong { display: block; margin-bottom: 4px; font-size: 13px; }.provider-copy span { color: var(--muted); font-size: 11px; line-height: 1.5; }
-    .provider-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-    .provider-actions button, .provider-actions a { border: 0; border-radius: 999px; padding: 9px 12px; background: #8063e8; color: white; text-decoration: none; font-size: 11px; font-weight: 900; }
-    .provider-actions a { background: #e9e4fb; color: #6752b3; }
-    .loading-dots { display: inline-block; animation: loading-pulse 1s infinite alternate; }
-    @keyframes loading-pulse { to { opacity: .35; } }
-    .preview-actions { display: flex; gap: 8px; margin-top: 14px; }
-    .preview-actions button { flex: 1; border: 1px solid #ded8f2; border-radius: 11px; padding: 10px; background: white; color: #6f59c0; font-size: 12px; font-weight: 900; }
-    .game-demo { margin-top: 12px; padding: 16px; border-radius: 15px; background: #e9f8f1; text-align: center; }
-    .game-demo button { border: 0; border-radius: 999px; background: white; padding: 11px 16px; font-weight: 900; color: #39896c; }
-    .game-score { display: block; margin: 9px 0 0; font-size: 12px; color: #537365; }
-    .audio-demo { margin-top: 10px; border: 1px solid #eee5cd; border-radius: 13px; padding: 11px; background: #fffaf0; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
-    .audio-demo button { border: 0; border-radius: 999px; padding: 8px 10px; background: #ffcb58; color: #664c14; font-weight: 900; }
-    .toast { position: fixed; z-index: 10; bottom: 24px; left: 50%; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 12px 18px; background: #25324a; color: white; border-radius: 999px; font-size: 13px; font-weight: 800; transition: .2s; }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
-    footer { border-top: 1px solid rgba(238,232,220,.8); padding: 20px 0 28px; text-align: center; color: #8a93a2; font-size: 11px; line-height: 1.7; }
-    @media (max-width: 850px) {
-      .career-grid { grid-template-columns: repeat(2, 1fr); }
-      .detail-layout { grid-template-columns: 1fr; }.info-panel { position: static; }
-      .board-grid { grid-template-columns: repeat(2, 1fr); }
-      .hero { padding: 38px 6%; }.hero-visual { transform: scale(.85); }
-    }
-    @media (max-width: 560px) {
-      .shell { width: min(100% - 26px, 480px); }
-      header { height: 65px; }.brand { font-size: 13px; }.brand-bot { width: 31px; height: 31px; }
-      .quiet-button { padding: 9px 11px; font-size: 12px; }
-      .hero { grid-template-columns: 1fr; min-height: auto; padding: 30px 25px 10px; margin: 15px 0 29px; border-radius: 26px; }
-      .hero-copy { font-size: 14px; }.hero-visual { min-height: 160px; transform: scale(.75); margin-top: -8px; }
-      .career-grid { gap: 10px; }.career-card { min-height: 192px; padding: 15px; border-radius: 20px; }
-      .card-icon { width: 57px; height: 57px; font-size: 30px; margin-bottom: 14px; border-radius: 18px; }
-      .card-title { font-size: 16px; }.card-description { font-size: 11px; }
-      .section-heading h2 { font-size: 21px; }.section-heading p { font-size: 12px; }
-      .board-section { margin-top: 42px; }.board-grid { grid-template-columns: 1fr; }
-      .section-heading.board-heading { align-items: start; flex-direction: column; }
-      .detail-toolbar { gap: 8px; }.detail-layout { gap: 13px; }
-      .info-panel, .studio-panel { border-radius: 22px; padding: 21px; }
-      .post-card { min-height: 145px; }
-    }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>꼬마 AI 창작 연구소</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2b2d42;--muted:#6b7090;--main:#7c5cff;--soft:#efeaff;--deep:#5a3ee0;--cream:#fff7ea}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Gowun Dodum','Malgun Gothic',sans-serif;color:var(--ink);background:radial-gradient(circle at 12% 8%,#d7f6ec 0,transparent 38%),radial-gradient(circle at 92% 22%,#ece4ff 0,transparent 40%),radial-gradient(circle,rgba(124,92,255,.08) 1.5px,transparent 1.6px) 0 0/26px 26px,var(--cream);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,button,.jua,.badge,.step{font-family:'Jua',sans-serif;font-weight:400}
+a{color:inherit;text-decoration:none}
+.cloud{position:fixed;background:#fff;border-radius:999px;opacity:.8;z-index:-1;animation:drift 45s linear infinite}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.c1{width:180px;height:56px;top:14%;left:-220px}.c1::before{width:80px;height:80px;top:-40px;left:30px}.c1::after{width:60px;height:60px;top:-28px;left:95px}
+.c2{width:240px;height:70px;top:58%;left:-280px;animation-duration:65s;animation-delay:-25s}.c2::before{width:100px;height:100px;top:-55px;left:40px}.c2::after{width:80px;height:80px;top:-38px;left:125px}
+@keyframes drift{to{transform:translateX(calc(100vw + 320px))}}
+@keyframes bob{50%{transform:translateY(-12px)}}
+.wrap{width:min(1200px,calc(100% - 32px));margin:auto}
+header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(255,255,255,.65);border-bottom:3px solid rgba(255,255,255,.9)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:76px;gap:10px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Jua';font-size:clamp(19px,3vw,26px)}
+.logo img{width:50px;height:54px;filter:drop-shadow(0 4px 0 rgba(90,62,224,.15));animation:bob 3s ease-in-out infinite}
+nav{display:flex;gap:10px}
+.nav-btn{display:inline-block;border:0;padding:11px 18px;border-radius:999px;background:#fff;font-family:'Jua';font-size:17px;box-shadow:0 5px 0 #d9dcef;cursor:pointer;transition:.15s;white-space:nowrap}
+.nav-btn:hover{transform:translateY(-2px)}.nav-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #d9dcef}
+.nav-btn.on{background:#7c5cff;color:#fff;box-shadow:0 5px 0 #5a3ee0}
+main{padding:24px 0 80px}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 16px}
+.step{background:rgba(255,255,255,.85);padding:8px 16px;border-radius:999px;font-size:16px;color:var(--muted)}
+.step.now{background:#ffd84d;color:var(--ink);box-shadow:0 4px 0 #e6b800}.step.done{color:#2f9e6b}
+.art{position:relative;display:grid;place-items:center;overflow:hidden}
+.art .emo{font-size:110px;filter:drop-shadow(0 10px 0 rgba(0,0,0,.08));animation:bob 3s ease-in-out infinite}
+.art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* 첫 화면 */
+.hero{position:relative;border-radius:40px;overflow:hidden;background:#cfeee4;box-shadow:0 12px 0 #a9dccb;aspect-ratio:1376/768;max-height:620px;width:100%}
+.hero>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:right center}
+.hero-txt{position:absolute;left:4%;top:50%;transform:translateY(-50%);width:38%}
+.hi{display:inline-block;background:#fff;padding:8px 16px;border-radius:999px;font-family:'Jua';font-size:clamp(14px,1.5vw,18px);color:#2f9e83;box-shadow:0 4px 0 #a9dccb}
+.hero h1{font-size:clamp(30px,4.3vw,56px);margin:14px 0 10px;line-height:1.18;color:var(--ink);text-shadow:0 3px 0 #fff}
+.hero h1 em{font-style:normal;color:#7c5cff;background:linear-gradient(transparent 60%,#ffe066 60%)}
+.hero .btn{width:auto;display:inline-block;padding:14px 26px;margin-top:6px}
+.bubble{position:absolute;right:2.5%;bottom:5%;display:flex;align-items:flex-end;gap:6px}
+.bubble img{width:clamp(70px,9vw,118px);animation:bob 3s ease-in-out infinite}
+.bubble span{background:#fff;border-radius:20px 20px 4px 20px;padding:10px 14px;font-family:'Jua';font-size:clamp(13px,1.4vw,17px);box-shadow:0 4px 0 #dcd3ff;margin-bottom:70px;white-space:nowrap}
+.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:30px 0 8px}
+.flow div{background:#fff;border-radius:26px;padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 7px 0 #e6e1f7}
+.flow i{font-style:normal;flex:none;width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:30px}
+.flow b{display:block;font-family:'Jua';font-weight:400;font-size:20px}.flow small{color:var(--muted);font-size:14px}
+.sec-title{scroll-margin-top:96px;font-size:clamp(26px,3.5vw,38px);margin:36px 0 18px;display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}
+.sec-title small{font-family:'Gowun Dodum';font-size:16px;color:var(--muted)}
+.pick{display:grid;grid-template-columns:repeat(2,1fr);gap:28px}
+.big{position:relative;border-radius:36px;overflow:hidden;background:#fff;box-shadow:0 12px 0 var(--deep);transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;border:5px solid #fff}
+.big:hover{transform:translateY(-6px) rotate(-.6deg)}.big:active{transform:translateY(8px);box-shadow:0 4px 0 var(--deep)}
+.mosaic{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:repeat(3,1fr);gap:5px;height:300px}
+.mosaic .art{background:var(--soft);border-radius:22px}.mosaic .art:first-child{grid-row:1/4}.mosaic .emo{font-size:40px}.mosaic .art:first-child .emo{font-size:110px}
+.big .txt{padding:18px 22px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.big h2{margin:0;font-size:36px;color:var(--deep)}.big p{margin:4px 0 0;color:var(--muted);font-size:16px}
+.go{flex:none;width:62px;height:62px;border-radius:50%;background:var(--main);color:#fff;font-size:30px;display:grid;place-items:center;font-family:'Jua';transition:.2s;box-shadow:0 5px 0 var(--deep)}
+.big:hover .go{transform:translateX(6px)}
+.tag{position:absolute;top:14px;left:14px;z-index:2;background:#fff;padding:7px 15px;border-radius:999px;font-family:'Jua';color:var(--deep);box-shadow:0 4px 0 var(--soft)}
+.count{position:absolute;top:14px;right:14px;z-index:2;background:var(--main);color:#fff;padding:7px 13px;border-radius:999px;font-family:'Jua';font-size:15px}
+/* 공통 띠 */
+.back{margin:4px 0 18px}
+.band{display:grid;grid-template-columns:180px 1fr;gap:26px;align-items:center;background:var(--soft);border-radius:36px;padding:24px;box-shadow:0 10px 0 var(--deep);position:relative;overflow:hidden}
+.band::after{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.45)}
+.faces{display:flex;margin-top:14px}.faces img{width:54px;height:54px;border-radius:50%;object-fit:cover;border:4px solid #fff;margin-left:-12px;box-shadow:0 3px 0 rgba(0,0,0,.06)}.faces img:first-child{margin-left:0}
+.band .art{height:180px;border-radius:30px;background:#fff;border:5px solid #fff;box-shadow:0 6px 0 rgba(0,0,0,.06)}.band .emo{font-size:84px}
+.band h1{margin:6px 0 8px;font-size:clamp(28px,4vw,44px);color:var(--deep)}.band p{margin:0;font-size:18px;color:var(--muted)}
+/* 직업 */
+.jobs{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:34px}
+.job{background:#fff;border-radius:30px;overflow:hidden;box-shadow:0 10px 0 #dfe3f3;transition:.2s;display:flex;flex-direction:column}
+.job:hover{transform:translateY(-8px);box-shadow:0 14px 0 var(--main)}
+.job{border:5px solid #fff}.job .pic{position:relative}.job .art{aspect-ratio:1/1;background:var(--soft);border-radius:24px}.job .emo{font-size:86px}
+.job .no{position:absolute;top:10px;left:10px;z-index:2;width:38px;height:38px;border-radius:50%;background:#fff;color:var(--deep);display:grid;place-items:center;font-family:'Jua';font-size:20px;box-shadow:0 3px 0 var(--soft)}
+.job .body{padding:14px 16px 18px;flex:1;display:flex;flex-direction:column}
+.job h3{margin:0 0 6px;font-size:23px;color:var(--deep)}.job p{margin:0 0 10px;color:var(--muted);font-size:15px;line-height:1.6}
+.job ul{margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.8}
+.cta{margin-top:auto;background:var(--main);color:#fff;border-radius:16px;padding:12px;text-align:center;font-family:'Jua';font-size:18px}
+/* 실습 */
+.lab{display:grid;grid-template-columns:1.25fr .75fr;gap:24px;margin-top:30px;align-items:start}
+.panel{background:#fff;border-radius:32px;padding:28px;box-shadow:0 10px 0 #dfe3f3}
+.group{margin-bottom:24px}.group h3{margin:0 0 12px;font-size:22px;display:flex;align-items:center;gap:10px}
+.num{width:34px;height:34px;border-radius:50%;background:var(--main);color:#fff;display:grid;place-items:center;font-size:18px}
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{border:3px solid #eceef8;background:#fafbff;border-radius:999px;padding:10px 17px;font-size:17px;cursor:pointer;transition:.12s;color:var(--ink)}
+.chip:hover{border-color:var(--main)}.chip.sel{background:var(--main);border-color:var(--main);color:#fff;transform:scale(1.06)}
+textarea,input,select{width:100%;border:3px solid #eceef8;border-radius:18px;padding:12px 14px;font-family:inherit;font-size:16px;background:#fafbff;margin-bottom:12px}
+.sticky{position:sticky;top:96px}.sticky h3{margin:0 0 12px;font-size:24px}
+.prompt{background:#2b2d42;color:#fff;border-radius:22px;padding:20px;white-space:pre-wrap;font-size:16px;line-height:1.75;min-height:190px}
+.btn{display:block;width:100%;text-align:center;border:0;border-radius:18px;padding:14px 18px;font-size:19px;cursor:pointer;color:#fff;background:var(--main);box-shadow:0 6px 0 var(--deep);margin-top:14px;transition:.12s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--deep)}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 6px 0 #dfe3f3;border:3px solid #eceef8}
+.btn.yellow{background:#ffc93c;color:var(--ink);box-shadow:0 6px 0 #e0a800}
+.tip{font-size:14px;color:var(--muted);line-height:1.7;margin:16px 0 0}
+/* 게시판 */
+.board-head{display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:16px;margin-bottom:18px}
+.board-head h1{margin:0 0 6px;font-size:clamp(30px,4.5vw,50px)}.board-head p{margin:0;font-size:18px;color:var(--muted)}
+.board-head .btn{width:auto;margin:0;padding:14px 26px}
+.filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:24px}
+.posts{columns:3 280px;column-gap:22px}
+.post{break-inside:avoid;background:#fff;border-radius:26px;overflow:hidden;margin-bottom:22px;box-shadow:0 8px 0 #dfe3f3}
+.post>img{width:100%;display:block}.noimg{height:150px;display:grid;place-items:center;font-size:70px;background:var(--soft)}
+.pb{padding:16px 18px 18px}
+.badge{display:inline-block;padding:5px 13px;border-radius:999px;font-size:14px;background:var(--soft);color:var(--deep)}
+.post h3{margin:10px 0 4px;font-size:22px}.by{color:var(--muted);font-size:14px}.post p{line-height:1.6;margin:10px 0 0}
+details{margin-top:10px;font-size:14px;color:var(--muted)}summary{cursor:pointer}pre{white-space:pre-wrap;font-family:inherit;background:#f5f6fb;padding:10px;border-radius:12px}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.like{border:0;background:#fff0f3;color:#ff4d7a;border-radius:999px;padding:8px 16px;font-size:17px;cursor:pointer}.like.done{background:#ff4d7a;color:#fff}
+.del{border:0;background:none;color:#b0b4c8;cursor:pointer;font-size:13px;font-family:inherit}
+.empty{column-span:all;text-align:center;padding:60px 20px;background:rgba(255,255,255,.75);border-radius:30px;font-size:21px;line-height:1.7}
+/* 모달·토스트 */
+.modal{position:fixed;inset:0;background:rgba(43,45,66,.5);display:none;place-items:center;z-index:50;padding:16px}.modal.open{display:grid}
+.sheet{background:#fff;border-radius:32px;padding:28px;width:min(520px,100%);max-height:92vh;overflow:auto}.sheet h2{margin:0 0 16px;font-size:28px}
+.drop{display:block;border:3px dashed #cfd3ea;border-radius:20px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);margin-bottom:12px;font-size:17px}
+.drop img{max-width:100%;border-radius:14px}
+.row2{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+#toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,120px);background:#2b2d42;color:#fff;padding:14px 24px;border-radius:999px;font-family:'Jua';font-size:18px;transition:.3s;z-index:60}
+#toast.show{transform:translate(-50%,0)}
+footer{text-align:center;color:var(--muted);padding:20px 0 40px;font-size:14px}
+@media(max-width:1000px){.flow{grid-template-columns:1fr}.mosaic{height:240px}.jobs{grid-template-columns:repeat(2,1fr)}.lab{grid-template-columns:1fr}.sticky{position:static}}
+@media(max-width:760px){.hero{aspect-ratio:auto;max-height:none;display:flex;flex-direction:column}.hero>img.bg{position:static;aspect-ratio:1376/768;height:auto}.hero-txt{position:static;transform:none;width:auto;padding:20px 20px 24px;text-align:center}.hero .steps{justify-content:center}.bubble{display:none}}
+@media(max-width:700px){.pick,.jobs{grid-template-columns:1fr}.band{grid-template-columns:1fr;text-align:center}.band .art{width:180px;margin:auto}.faces{justify-content:center}.big h2{font-size:30px}.logo span{display:none}nav .nav-btn{padding:10px 13px;font-size:15px}}
+</style>
 </head>
 <body>
-  <header class="shell">
-    <div class="brand"><span class="brand-bot" aria-hidden="true">🤖</span><span>꼬마 AI 창작 연구소</span></div>
-    <nav class="nav-actions" aria-label="주 메뉴">
-      <button class="quiet-button" id="homeButton" type="button">🏠 처음으로</button>
-      <button class="quiet-button" id="boardButton" type="button">📌 작품 게시판</button>
-    </nav>
-  </header>
-  <main class="shell" id="app"></main>
-  <footer class="shell">
-    <strong>AI Contents designer</strong> · 아이디어는 내가, 멋진 상상은 함께!<br>
-    Gemini가 네 가지 작품 초안을 만들고, 각 창작 화면에서 Gemini·Canva·Suno·Genspark로 이동해 이어 만들 수 있어요. 주문서를 복사해 외부 서비스에 붙여 넣어 주세요.
-  </footer>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="./supabase-config.js"></script>
-  <script>
-    (() => {
-      const fields = {
-        game: {
-          title: "AI로 만드는 게임", job: "게임 디자이너", icon: "🕹️", button: "🎮 게임 만들기",
-          provider: { name: "Gemini", url: "https://gemini.google.com/" },
-          short: "상상 속 규칙과 캐릭터로 나만의 게임을 만들어요.",
-          description: "게임 디자이너는 어떤 놀이를 만들지 상상하고, 규칙과 캐릭터를 정해 사람들이 재미있게 즐길 수 있도록 만들어요.",
-          jobInfo: "게임 디자이너는 이야기 작가, 그림 작가, 개발자와 함께 일해요. AI에게 아이디어를 물어보고, 사람에게 재미있는지 직접 시험하며 고쳐요.",
-          prompt: "구름 위에서 별을 모으는 고양이",
-          hint: "누가 주인공인지, 무엇을 하면 재미있을지 적어보세요.",
-          output: (idea) => `🌟 게임 아이디어\n${idea}을(를) 주제로 해요.\n\n목표: 반짝이는 아이템을 모으고 장애물을 피해요!\n규칙: 아이템을 누르면 점수가 1점 올라가요.\n다음 단계: 주인공과 게임 배경을 그려 보세요.`,
-          visual: "🐱　☁️　⭐　☁️",
-          demo: "game"
-        },
-        video: {
-          title: "AI로 만드는 영상", job: "영상 감독", icon: "🎬", button: "🎥 영상 만들기",
-          provider: { name: "Canva", url: "https://www.canva.com/" },
-          short: "짧은 이야기와 장면을 이어서 영상으로 표현해요.",
-          description: "영상 감독은 어떤 이야기를 보여줄지 정하고, 장면·대사·음악을 골라 재미있고 알기 쉬운 영상으로 만들어요.",
-          jobInfo: "영상 감독은 촬영 감독, 배우, 편집자와 함께 일해요. AI와 장면 아이디어를 나누고, 영상의 순서를 직접 계획하고 다듬어요.",
-          prompt: "바닷속에서 보물을 찾는 아기 거북이",
-          hint: "주인공과 장소, 일어나는 일을 짧게 써보세요.",
-          output: (idea) => `🎞️ 나의 3장면 이야기\n\n장면 1 · 시작\n${idea}의 첫 장면! 넓은 풍경을 보여줘요.\n\n장면 2 · 모험\n주인공이 새로운 친구를 만나 함께 문제를 해결해요.\n\n장면 3 · 마무리\n모두 힘을 모아 멋진 결말을 만들어요!`,
-          visual: "🎬　🌊　🐢　✨",
-          demo: "video"
-        },
-        song: {
-          title: "AI로 만드는 노래", job: "작곡가", icon: "🎵", button: "🎹 노래 만들기",
-          provider: { name: "Suno", url: "https://suno.com/" },
-          short: "기분과 단어를 골라 나만의 노랫말을 지어요.",
-          description: "작곡가는 마음을 움직이는 멜로디와 가사를 만들어요. 신나는 노래, 조용한 노래처럼 느낌에 맞는 소리를 골라요.",
-          jobInfo: "작곡가는 가수와 연주자, 작사가와 함께 노래를 만들어요. AI가 떠올린 단어도 참고하고, 어떤 노래를 들려줄지 직접 결정해요.",
-          prompt: "친구와 함께 떠나는 신나는 우주 여행",
-          hint: "노래에 꼭 넣고 싶은 이야기나 단어를 적어보세요.",
-          output: (idea) => `🎶 ${idea}\n\n반짝반짝 별빛 따라\n두근두근 마음 모아\n손을 잡고 날아가자\n우리의 꿈을 찾아서!\n\n(후렴) 라라라, 신나는 오늘\n라라라, 함께 부르자!`,
-          visual: "🎤　🎼　🎹　🎶",
-          demo: "song"
-        },
-        art: {
-          title: "AI로 만드는 그림", job: "일러스트레이터", icon: "🎨", button: "🖌️ 그림 만들기",
-          provider: { name: "Genspark", url: "https://www.genspark.ai/" },
-          short: "색과 모양으로 머릿속 이야기를 그림으로 그려요.",
-          description: "일러스트레이터는 책이나 게임에 들어갈 그림을 그려요. 색, 표정, 배경을 정해 머릿속 상상을 눈에 보이게 표현해요.",
-          jobInfo: "일러스트레이터는 작가, 디자이너와 함께 그림을 만들어요. AI에게 원하는 그림을 말로 설명해 보고, 마음에 드는 부분을 골라 발전시켜요.",
-          prompt: "보라색 우주복을 입고 달에서 춤추는 토끼",
-          hint: "무엇을 그릴지, 어떤 색과 분위기인지 적어보세요.",
-          output: (idea) => `🖼️ 그림 설명 카드\n\n“${idea}”\n\n색칠 아이디어: 보라색과 노란색을 함께 써봐요.\n배경 아이디어: 작은 별과 둥근 달을 더해봐요.\n\n이 설명을 보고 직접 그림을 그려도 좋아요!`,
-          visual: "🌙　🐰　🪐　⭐",
-          demo: "art"
-        }
-      };
-      const starterPosts = [
-        { id: "sample-game", category: "game", title: "별을 줍는 용용이", content: "구름 위를 뛰어다니며 별을 모으는 게임! 장애물은 무지개예요.", date: "오늘", sample: true },
-        { id: "sample-song", category: "song", title: "숲속 친구들 합창단", content: "다람쥐와 토끼가 함께 부르는 신나는 봄 노래를 만들었어요.", date: "오늘", sample: true },
-        { id: "sample-art", category: "art", title: "달나라 피크닉", content: "분홍 우주복을 입은 고양이가 달에서 샌드위치를 먹어요.", date: "오늘", sample: true }
-      ];
-      const app = document.getElementById("app");
-      const toast = document.getElementById("toast");
-      const supabaseConfig = window.AI_CONTENTS_CONFIG || {};
-      const supabaseUrl = typeof supabaseConfig.url === "string" ? supabaseConfig.url.replace(/\/+$/, "") : "";
-      const supabasePublishableKey = typeof supabaseConfig.publishableKey === "string" ? supabaseConfig.publishableKey : "";
-      let activeField = null;
-      let currentPreview = null;
-      let activeFilter = "all";
-      const apiAvailable = new Set();
-      let videoAnimationFrame = 0;
-      let videoRecorder = null;
-      let videoRecordingTimer = 0;
-      let cancelVideoDownload = false;
+<div class="cloud c1"></div><div class="cloud c2"></div>
+<header><div class="wrap">
+  <a class="logo" href="#/"><img src="images/mascot.svg" alt=""><span>꼬마 AI 창작 연구소</span></a>
+  <nav><a class="nav-btn" data-n="home" href="#/">🏠 처음 화면</a><a class="nav-btn" data-n="board" href="#/board">🏆 작품 게시판</a></nav>
+</div></header>
+<main class="wrap" id="app"></main>
+<footer>꼬마 AI 창작 연구소 · AI와 함께 상상을 작품으로 ✨</footer>
 
-      function getPosts() {
-        try {
-          const saved = JSON.parse(localStorage.getItem("aiContentsDesignerPosts") || "[]");
-          return Array.isArray(saved) ? [...saved, ...starterPosts] : starterPosts;
-        } catch (error) {
-          console.error("작품 게시물을 불러오지 못했습니다.", error);
-          return starterPosts;
-        }
-      }
-      function savePost(post) {
-        try {
-          const saved = JSON.parse(localStorage.getItem("aiContentsDesignerPosts") || "[]");
-          const posts = Array.isArray(saved) ? saved : [];
-          posts.unshift(post);
-          localStorage.setItem("aiContentsDesignerPosts", JSON.stringify(posts));
-          return true;
-        } catch (error) {
-          console.error("작품을 저장하지 못했습니다.", error);
-          showToast("저장할 수 없어요. 브라우저 저장 공간을 확인해 주세요.");
-          return false;
-        }
-      }
-      function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-      }
-      function escapeXml(value) {
-        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[char]);
-      }
-      function showToast(message) {
-        toast.textContent = message;
-        toast.classList.add("show");
-        window.setTimeout(() => toast.classList.remove("show"), 2300);
-      }
-      function buildProviderPrompt(key, title, idea) {
-        const field = fields[key];
-        const instructions = {
-          game: "어린이가 즐길 수 있는 안전하고 재미있는 게임을 만들어 주세요. 규칙, 목표, 주인공, 아이템, 장애물을 구체적으로 제안해 주세요.",
-          video: "이 아이디어로 짧고 재미있는 세로형 영상을 만들 수 있도록 장면, 화면 분위기, 자막을 구성해 주세요.",
-          song: "이 아이디어로 완전히 새로운 노래를 만들어 주세요. 기존 노래나 가수의 가사와 멜로디를 따라 하지 말고, 어린이가 부르기 쉬운 가사와 밝은 분위기로 만들어 주세요.",
-          art: "이 아이디어를 따뜻하고 상상력이 풍부한 그림으로 만들어 주세요. 주인공이 잘 보이도록 구도와 색을 정하고, 어린이에게 친근하고 안전한 표현을 사용해 주세요."
-        };
-        return `${instructions[key]}\n작품 제목: ${title}\n아이디어: ${idea}\n${field.provider.name}에서 이 내용으로 작품을 만들어 주세요.`;
-      }
-      function renderHome(shouldScroll = false) {
-        cancelAnimationFrame(videoAnimationFrame);
-        stopVideoRecording();
-        activeField = null;
-        currentPreview = null;
-        app.innerHTML = `
-          <section class="hero" aria-labelledby="page-title">
-            <div>
-              <span class="eyebrow">✨ 오늘은 내가 AI 콘텐츠 디자이너!</span>
-              <h1 id="page-title">AI Contents<br>designer</h1>
-              <p class="hero-copy">AI와 함께 상상하고, 직접 만들어봐요!<br>어떤 콘텐츠 디자이너가 되어볼까요?</p>
-            </div>
-            <div class="hero-visual" aria-hidden="true">
-              <div class="bot-scene"><span class="bot-orbit"></span><span class="floaty one">✨</span><span class="floaty two">💡</span><span class="floaty three">⭐</span><div class="big-bot"><span class="antenna"></span><span class="cheek"></span><span class="cheek right"></span></div></div>
-            </div>
-          </section>
-          <section aria-labelledby="choose-title">
-            <div class="section-heading"><div><h2 id="choose-title">무엇을 만들어 볼까요?</h2><p>마음에 드는 카드를 눌러 시작해요!</p></div><span class="count-pill">4가지 창작 놀이터</span></div>
-            <div class="career-grid">
-              ${Object.entries(fields).map(([key, field]) => `<button class="career-card ${key}" data-field="${key}" type="button"><span class="card-icon" aria-hidden="true">${field.icon}</span><span class="card-title">${field.title}</span><span class="card-description">${field.short}</span><span class="card-provider">🚀 ${field.provider.name} 연결</span><span class="card-arrow">만들기 →</span></button>`).join("")}
-            </div>
-          </section>
-          ${boardMarkup()}
-        `;
-        app.querySelectorAll("[data-field]").forEach((button) => button.addEventListener("click", () => renderStudio(button.dataset.field)));
-        wireBoard();
-        if (shouldScroll) document.getElementById("board")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-      function boardMarkup() {
-        const posts = getPosts().filter((post) => activeFilter === "all" || post.category === activeFilter);
-        return `<section class="board-section" id="board" aria-labelledby="board-title">
-          <div class="section-heading board-heading">
-            <div><h2 id="board-title">📌 우리들의 작품 게시판</h2><p>게임, 영상, 노래, 그림 작품이 한곳에 모여요.</p></div>
-            <div class="board-tools" aria-label="작품 종류 필터">
-              <button class="filter-button ${activeFilter === "all" ? "active" : ""}" data-filter="all" type="button">전체</button>
-              ${Object.entries(fields).map(([key, field]) => `<button class="filter-button ${activeFilter === key ? "active" : ""}" data-filter="${key}" type="button">${field.icon}</button>`).join("")}
-            </div>
-          </div>
-          <div class="board-grid">${posts.length ? posts.map(postMarkup).join("") : '<div class="empty-board">아직 작품이 없어요. 첫 번째 작품을 만들어 게시해 볼까요? ✨</div>'}</div>
-        </section>`;
-      }
-      function postMarkup(post) {
-        const field = fields[post.category] || fields.art;
-        return `<article class="post-card" data-category="${escapeHtml(post.category)}">
-          <div class="post-top"><span class="post-category">${field.icon} ${field.title.replace("AI로 만드는 ", "")}</span><span class="post-date">${escapeHtml(post.date || "오늘")}</span></div>
-          <h3>${escapeHtml(post.title)}</h3><p>${escapeHtml(post.content)}</p>
-        </article>`;
-      }
-      function wireBoard() {
-        app.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => {
-          activeFilter = button.dataset.filter;
-          renderHome(true);
-        }));
-      }
-      function renderStudio(key) {
-        const field = fields[key];
-        if (!field) return;
-        activeField = key;
-        currentPreview = null;
-        app.innerHTML = `<section class="detail-page">
-          <div class="detail-toolbar"><button class="back-button" id="backButton" type="button">← 분야 선택으로</button><span class="count-pill">나의 창작 스튜디오</span></div>
-          <div class="detail-layout">
-            <aside class="info-panel">
-              <div class="field-badge" aria-hidden="true">${field.icon}</div>
-              <h2>${field.job}</h2>
-              <p>${field.description}</p>
-              <div class="job-box"><h3>👩‍🚀 어떤 일을 할까요?</h3><p>${field.jobInfo}</p></div>
-              <div class="sparkle-note">💡 AI는 아이디어를 도와주는 친구예요.<br>내가 생각하고 고르는 것이 가장 중요해요!</div>
-            </aside>
-            <section class="studio-panel" aria-labelledby="studio-title">
-              <h2 id="studio-title">${field.button}</h2>
-              <p class="intro">아이디어를 적어 Gemini 초안을 만들거나, 아래 링크에서 외부 AI 도구를 열어 직접 작품을 완성해 보세요.</p>
-              <div class="api-status" id="apiStatus" role="status">Gemini 연결 상태를 확인하고 있어요<span class="loading-dots">…</span></div>
-              <div class="provider-panel">
-                <div class="provider-copy"><strong>🚀 ${field.provider.name}에서 이어 만들기</strong><span>주문서를 복사한 뒤 서비스를 열고 붙여 넣으세요. 로그인이나 무료 사용 한도는 서비스 정책에 따라 다를 수 있어요.</span></div>
-                <div class="provider-actions"><button id="copyProviderPrompt" type="button">📋 주문서 복사</button><a href="${field.provider.url}" target="_blank" rel="noopener noreferrer">🚀 ${field.provider.name} 열기</a></div>
-              </div>
-              <form id="createForm">
-                <div class="field"><label for="workTitle">작품 제목</label><input id="workTitle" maxlength="50" required placeholder="예: 반짝별 탐험대"></div>
-                <div class="field"><label for="ideaInput">내 아이디어</label><textarea id="ideaInput" maxlength="240" required>${escapeHtml(field.prompt)}</textarea><div class="prompt-hint">${field.hint} (최대 240자)</div></div>
-                <button class="primary-button" type="submit">${field.button}</button>
-              </form>
-              <div class="preview-box" id="previewBox" hidden></div>
-            </section>
-          </div>
-        </section>`;
-        document.getElementById("backButton").addEventListener("click", () => renderHome());
-        checkApiStatus(key);
-        document.getElementById("copyProviderPrompt").addEventListener("click", async () => {
-          const title = document.getElementById("workTitle").value.trim();
-          const idea = document.getElementById("ideaInput").value.trim();
-          if (!idea) {
-            showToast("먼저 아이디어를 적어 주세요.");
-            document.getElementById("ideaInput").focus();
-            return;
-          }
-          try {
-            await navigator.clipboard.writeText(buildProviderPrompt(key, title || field.button, idea));
-            showToast(`${field.provider.name}에 붙여넣을 주문서를 복사했어요!`);
-          } catch (error) {
-            console.error("AI 주문서를 클립보드에 복사하지 못했습니다.", error);
-            showToast("복사할 수 없어요. 브라우저의 클립보드 권한을 확인해 주세요.");
-          }
-        });
-        document.getElementById("createForm").addEventListener("submit", async (event) => {
-          event.preventDefault();
-          const title = document.getElementById("workTitle").value.trim();
-          const idea = document.getElementById("ideaInput").value.trim();
-          if (!title || !idea) return;
-          const submitButton = event.currentTarget.querySelector('button[type="submit"]');
-          submitButton.disabled = true;
-          submitButton.textContent = "✨ 만들고 있어요…";
-          try {
-            if (!apiAvailable.has(key)) throw new Error("Gemini 연결을 확인할 수 없어요. 잠시 후 다시 시도해 주세요.");
-            const result = await generateWithGemini(key, idea);
-            currentPreview = { key, title, idea, result, generated: true, content: formatGeneratedWork(key, result) };
-          } catch (error) {
-            showToast(error.message);
-            submitButton.disabled = false;
-            submitButton.textContent = field.button;
-            return;
-          }
-          renderPreview();
-        });
-      }
-      async function checkApiStatus(key) {
-        const status = document.getElementById("apiStatus");
-        if (supabaseUrl && supabasePublishableKey) {
-          try {
-            const response = await fetch(`${supabaseUrl}/functions/v1/ai-generate`, {
-              headers: { apikey: supabasePublishableKey, Authorization: `Bearer ${supabasePublishableKey}` }
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok || !data.configured) throw new Error(data.error || "Gemini 키가 설정되지 않았어요.");
-            apiAvailable.add(key);
-            status.className = "api-status ready";
-            status.textContent = "✅ Gemini 2.5 Flash 연결 완료 · 네 가지 작품을 생성할 수 있어요.";
-          } catch (error) {
-            apiAvailable.delete(key);
-            status.className = "api-status error";
-            status.textContent = `⚠️ Gemini 백엔드 연결 실패: ${error.message}`;
-          }
-          return;
-        }
-        try {
-          const response = await fetch("/api/status");
-          if (!response.ok) throw new Error("Gemini 서버에 연결할 수 없어요.");
-          const data = await response.json();
-          if (!data.configured) throw new Error("Gemini API 키가 아직 설정되지 않았어요.");
-          apiAvailable.add(key);
-          status.className = "api-status ready";
-          status.textContent = "✅ Gemini 2.5 Flash 연결 완료 · 네 가지 작품을 생성할 수 있어요.";
-        } catch {
-          apiAvailable.delete(key);
-          status.className = "api-status";
-          if (location.protocol === "file:" || location.hostname.endsWith("github.io")) {
-            status.textContent = "ℹ️ Gemini 서버 연결이 필요해요. README 안내에 따라 서버를 설정해 주세요.";
-            return;
-          }
-          status.className = "api-status error";
-          status.textContent = "⚠️ Gemini 서버에 연결할 수 없어요. 안내에 따라 start.ps1로 사이트를 실행해 주세요.";
-        }
-      }
-      async function generateWithGemini(category, idea) {
-        let response;
-        try {
-          response = await fetch(supabaseUrl && supabasePublishableKey
-            ? `${supabaseUrl}/functions/v1/ai-generate`
-            : "/api/generate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(supabaseUrl && supabasePublishableKey ? {
-                apikey: supabasePublishableKey,
-                Authorization: `Bearer ${supabasePublishableKey}`
-              } : {})
-            },
-            body: JSON.stringify({ category, idea })
-          });
-        } catch (error) {
-          throw new Error(supabaseUrl
-            ? "Supabase Gemini 서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요."
-            : "Gemini 서버에 연결할 수 없어요. start.ps1로 사이트를 실행했는지 확인해 주세요.");
-        }
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || "작품 생성에 실패했어요. 잠시 후 다시 시도해 주세요.");
-        return data.result;
-      }
-      function formatGeneratedWork(key, result) {
-        if (key === "game") {
-          return `🎮 ${result.title}\n${result.story}\n\n목표: ${result.goal}\n주인공: ${result.heroEmoji}　모을 것: ${result.collectibleEmoji}　조심할 것: ${result.obstacleEmoji}\n\n아래에서 직접 별을 모아 플레이해 보세요!`;
-        }
-        if (key === "song") return `🎵 ${result.mood} 노래 · ${result.bpm} BPM\n\n${result.lyrics.join("\n")}\n\n(후렴)\n${result.chorus}\n\n아래 재생 버튼을 누르면 만든 멜로디를 들어볼 수 있어요.`;
-        if (key === "video") return `🎬 ${result.logline}\n\n${result.scenes.map((scene, index) => `장면 ${index + 1} · ${scene.setting}\n${scene.action}\n내레이션: ${scene.narration}`).join("\n\n")}\n\n아래 미리보기에서 장면 애니메이션을 재생하고 영상 파일로 저장할 수 있어요.`;
-        return `🎨 ${result.description}\n\n주인공: ${result.subjectEmoji}\n장식: ${result.details.join(", ")}\n\n아래 그림을 SVG 파일로 내려받을 수 있어요.`;
-      }
-      function renderPreview() {
-        const field = fields[currentPreview.key];
-        const box = document.getElementById("previewBox");
-        box.hidden = false;
-        cancelAnimationFrame(videoAnimationFrame);
-        let demo = "";
-        if (field.demo === "game") {
-          demo = `<div class="preview-visual" aria-label="게임 주인공과 아이템">${escapeHtml(currentPreview.result.heroEmoji)}　${escapeHtml(currentPreview.result.collectibleEmoji)}　${escapeHtml(currentPreview.result.obstacleEmoji)}</div>`;
-        } else if (field.demo === "video") {
-          demo = `<canvas class="video-preview" id="videoCanvas" width="640" height="360" aria-label="AI가 만든 영상 장면 미리보기"></canvas><div class="video-controls"><button id="downloadVideo" type="button">🎬 영상 파일 만들기</button><a id="downloadVideoLink" hidden>영상 다운로드</a></div>`;
-        } else if (field.demo === "art") {
-          const artwork = artworkDataUrl(currentPreview.result, currentPreview.title);
-          demo = `<img class="artwork-preview" src="${artwork}" alt="${escapeHtml(currentPreview.title)} AI 그림"><div class="video-controls"><a href="${artwork}" download="${escapeHtml(currentPreview.title)}.svg">🖼️ 그림 다운로드 (SVG)</a></div>`;
-        } else {
-          demo = `<div class="preview-visual" aria-label="작품 아이디어 미리보기">${field.visual}</div>`;
-        }
-        if (field.demo === "game") demo += `<div class="game-demo"><button id="collectStar" type="button">${currentPreview.result ? escapeHtml(currentPreview.result.collectibleEmoji) : "⭐"} 모으기!</button><span class="game-score" id="gameScore">${currentPreview.result ? `주인공 ${escapeHtml(currentPreview.result.heroEmoji)} · 목표 ${escapeHtml(currentPreview.result.goal)}` : "별을 모아봐!"}<br>모은 아이템 0개</span></div>`;
-        if (field.demo === "song") demo += `<div class="audio-demo"><span>🎼 ${currentPreview.result ? `${escapeHtml(currentPreview.result.mood)} 멜로디 · ${escapeHtml(currentPreview.result.bpm)} BPM` : "브라우저 음성으로 미리 듣기"}</span><button id="playSong" type="button">▶ 들어보기</button></div>`;
-        box.innerHTML = `<div class="preview-head"><strong>✨ ${escapeHtml(currentPreview.title)} 미리보기</strong><span class="demo-label">${currentPreview.generated ? "Gemini 생성" : "예시 체험"}</span></div>${demo}<div class="preview-output">${escapeHtml(currentPreview.content)}</div><div class="preview-actions"><button id="postWork" type="button">📌 게시판에 올리기</button><button id="editWork" type="button">✏️ 다시 만들기</button></div>`;
-        if (field.demo === "game") {
-          let score = 0;
-          document.getElementById("collectStar").addEventListener("click", () => {
-            score += 1;
-            const item = currentPreview.result?.collectibleEmoji || "⭐";
-            document.getElementById("gameScore").innerHTML = `모은 ${escapeHtml(item)} ${score}개${currentPreview.result ? `<br>주인공 ${escapeHtml(currentPreview.result.heroEmoji)} · 조심할 것 ${escapeHtml(currentPreview.result.obstacleEmoji)}` : ""}`;
-          });
-        }
-        if (field.demo === "song") {
-          document.getElementById("playSong").addEventListener("click", () => {
-            if (!currentPreview.result) {
-              if (!("speechSynthesis" in window)) return showToast("이 브라우저에서는 음성 미리 듣기를 사용할 수 없어요.");
-              window.speechSynthesis.cancel();
-              const utterance = new SpeechSynthesisUtterance(currentPreview.content);
-              utterance.lang = "ko-KR";
-              window.speechSynthesis.speak(utterance);
-              return;
-            }
-            playGeneratedMelody(currentPreview.result);
-          });
-        }
-        if (field.demo === "video") {
-          startVideoPreview();
-          document.getElementById("downloadVideo").addEventListener("click", createVideoDownload);
-        }
-        document.getElementById("postWork").addEventListener("click", () => {
-          const post = { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, category: currentPreview.key, title: currentPreview.title, content: currentPreview.content, date: new Date().toLocaleDateString("ko-KR") };
-          if (!savePost(post)) return;
-          activeFilter = "all";
-          renderHome(true);
-          showToast("작품을 게시판에 올렸어요! 멋져요 🎉");
-        });
-        document.getElementById("editWork").addEventListener("click", () => {
-          cancelAnimationFrame(videoAnimationFrame);
-          stopVideoRecording();
-          const submitButton = document.querySelector('#createForm button[type="submit"]');
-          submitButton.disabled = false;
-          submitButton.textContent = field.button;
-          document.getElementById("workTitle").focus();
-          box.hidden = true;
-          currentPreview = null;
-        });
-        box.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-      const videoPalettes = {
-        ocean: ["#b8e7f5", "#4a9bb8"], sunset: ["#ffd3a8", "#e87c83"], forest: ["#cce8c5", "#5d9b72"],
-        space: ["#d8c9ff", "#8063c9"], candy: ["#ffd5e5", "#e783b1"], sunny: ["#fff0a8", "#e7a93c"]
-      };
-      const subjectColors = { coral: "#ff8b79", gold: "#f2c14e", mint: "#69c6a5", violet: "#9575cd", blue: "#64a9e8", pink: "#ec8bb5" };
-      function artworkDataUrl(art, title) {
-        const [background, accent] = videoPalettes[art.background] || videoPalettes.sunset;
-        const subject = subjectColors[art.subjectColor] || subjectColors.violet;
-        const detail = subjectColors[art.accentColor] || subjectColors.gold;
-        const decorations = art.details.map((item, index) => {
-          const x = 100 + (index * 137) % 440;
-          const y = 95 + (index * 89) % 180;
-          return `<circle cx="${x}" cy="${y}" r="18" fill="${detail}" opacity=".76"/><text x="${x}" y="${y + 7}" text-anchor="middle" font-size="17">${escapeXml(item.slice(0, 6))}</text>`;
-        }).join("");
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="440" viewBox="0 0 640 440"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="${background}"/><stop offset="1" stop-color="${accent}"/></linearGradient></defs><rect width="640" height="440" rx="32" fill="url(#bg)"/><circle cx="320" cy="215" r="112" fill="${subject}" opacity=".88"/><circle cx="320" cy="215" r="92" fill="#fff" opacity=".3"/>${decorations}<text x="320" y="250" text-anchor="middle" font-size="96">${escapeXml(art.subjectEmoji)}</text><rect x="28" y="350" width="584" height="62" rx="20" fill="#fff" opacity=".86"/><text x="320" y="378" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="700" fill="#25324a">${escapeXml(title.slice(0, 35))}</text><text x="320" y="400" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#596579">${escapeXml(art.description.slice(0, 52))}</text></svg>`;
-        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-      }
-      function paintVideoFrame(canvas, video, title, elapsed) {
-        const context = canvas.getContext("2d");
-        if (!context) throw new Error("영상 미리보기를 그릴 수 없습니다.");
-        const scenes = video.scenes;
-        const sceneDuration = 2200;
-        const sceneIndex = Math.floor(elapsed / sceneDuration) % scenes.length;
-        const scene = scenes[sceneIndex];
-        const [from, to] = videoPalettes[scene.palette] || videoPalettes.ocean;
-        const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, from);
-        gradient.addColorStop(1, to);
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = "rgba(255,255,255,.32)";
-        for (let index = 0; index < 7; index += 1) {
-          const x = ((index * 113 + elapsed * (0.012 + index * 0.001)) % (canvas.width + 70)) - 35;
-          const y = 44 + (index * 47) % 240;
-          context.beginPath();
-          context.arc(x, y, 16 + index % 3 * 7, 0, Math.PI * 2);
-          context.fill();
-        }
-        context.textAlign = "center";
-        context.fillStyle = "#25324a";
-        context.font = "700 23px sans-serif";
-        context.fillText(`${sceneIndex + 1} / ${scenes.length} · ${scene.setting}`, canvas.width / 2, 42, 580);
-        context.font = "112px sans-serif";
-        context.fillText(scene.emoji, canvas.width / 2, 205 + Math.sin(elapsed / 230) * 9);
-        context.font = "600 19px sans-serif";
-        context.fillText(scene.action, canvas.width / 2, 255, 580);
-        context.fillStyle = "rgba(255,255,255,.9)";
-        context.fillRect(28, 294, canvas.width - 56, 46);
-        context.fillStyle = "#25324a";
-        context.font = "16px sans-serif";
-        context.fillText(scene.narration, canvas.width / 2, 323, 560);
-        context.font = "700 16px sans-serif";
-        context.fillText(title.slice(0, 40), canvas.width / 2, 380, 580);
-      }
-      function startVideoPreview() {
-        const canvas = document.getElementById("videoCanvas");
-        if (!canvas || !currentPreview) return;
-        const startedAt = performance.now();
-        const animate = (now) => {
-          if (!canvas.isConnected || !currentPreview) return;
-          paintVideoFrame(canvas, currentPreview.result, currentPreview.title, now - startedAt);
-          videoAnimationFrame = requestAnimationFrame(animate);
-        };
-        videoAnimationFrame = requestAnimationFrame(animate);
-      }
-      function stopVideoRecording() {
-        window.clearTimeout(videoRecordingTimer);
-        cancelVideoDownload = true;
-        if (videoRecorder && videoRecorder.state !== "inactive") {
-          videoRecorder.stop();
-        }
-        videoRecorder = null;
-      }
-      function createVideoDownload() {
-        if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
-          showToast("이 브라우저는 영상 파일 저장을 지원하지 않아요. 다른 최신 브라우저에서 시도해 주세요.");
-          return;
-        }
-        const canvas = document.getElementById("videoCanvas");
-        if (!canvas) return;
-        cancelAnimationFrame(videoAnimationFrame);
-        const stream = canvas.captureStream(12);
-        const mimeType = typeof MediaRecorder.isTypeSupported === "function"
-          ? ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((type) => MediaRecorder.isTypeSupported(type))
-          : "";
-        try {
-          videoRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-        } catch (error) {
-          stream.getTracks().forEach((track) => track.stop());
-          console.error("영상 녹화를 시작하지 못했습니다.", error);
-          showToast("영상 저장을 시작할 수 없어요. 브라우저 설정을 확인해 주세요.");
-          return;
-        }
-        cancelVideoDownload = false;
-        const chunks = [];
-        const button = document.getElementById("downloadVideo");
-        button.disabled = true;
-        button.textContent = "⏳ 영상을 만들고 있어요…";
-        videoRecorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
-        videoRecorder.onerror = (event) => {
-          console.error("영상 녹화 중 오류가 발생했습니다.", event.error);
-          showToast("영상 파일을 만들지 못했어요. 다시 시도해 주세요.");
-        };
-        videoRecorder.onstop = () => {
-          stream.getTracks().forEach((track) => track.stop());
-          button.disabled = false;
-          button.textContent = "🎬 다시 만들기";
-          if (cancelVideoDownload) return;
-          const blob = new Blob(chunks, { type: videoRecorder?.mimeType || "video/webm" });
-          if (!blob.size) return showToast("영상 파일이 비어 있어요. 다시 시도해 주세요.");
-          const url = URL.createObjectURL(blob);
-          const link = document.getElementById("downloadVideoLink");
-          if (link) {
-            link.href = url;
-            link.download = `${currentPreview.title.replace(/[\\/:*?"<>|]/g, "-")}.webm`;
-            link.hidden = false;
-            link.textContent = "⬇️ 영상 다운로드 (WebM)";
-            link.click();
-          } else {
-            const download = document.createElement("a");
-            download.href = url;
-            download.download = "ai-contents-video.webm";
-            download.click();
-          }
-          window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-          showToast("AI 장면으로 영상 파일을 만들었어요!");
-          startVideoPreview();
-        };
-        videoRecorder.start();
-        const startedAt = performance.now();
-        const renderRecording = (now) => {
-          if (!canvas.isConnected || !currentPreview || !videoRecorder || videoRecorder.state !== "recording") return;
-          paintVideoFrame(canvas, currentPreview.result, currentPreview.title, now - startedAt);
-          videoAnimationFrame = requestAnimationFrame(renderRecording);
-        };
-        videoAnimationFrame = requestAnimationFrame(renderRecording);
-        videoRecordingTimer = window.setTimeout(() => {
-          if (videoRecorder && videoRecorder.state === "recording") videoRecorder.stop();
-        }, currentPreview.result.scenes.length * 2200);
-      }
-      function playGeneratedMelody(song) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContextClass) return showToast("이 브라우저에서는 멜로디 재생을 지원하지 않아요.");
-        const button = document.getElementById("playSong");
-        const context = new AudioContextClass();
-        const notes = Array.isArray(song.notes) ? song.notes.slice(0, 16) : [];
-        if (!notes.length) {
-          context.close();
-          return showToast("만든 멜로디를 찾지 못했어요. 다시 생성해 주세요.");
-        }
-        const beat = 60 / Math.max(60, Math.min(160, Number(song.bpm) || 100));
-        button.disabled = true;
-        button.textContent = "♪ 재생 중";
-        context.resume().then(() => {
-          notes.forEach((note, index) => {
-            const oscillator = context.createOscillator();
-            const gain = context.createGain();
-            const midi = Math.max(60, Math.min(84, Number(note) || 60));
-            oscillator.type = "sine";
-            oscillator.frequency.value = 440 * Math.pow(2, (midi - 69) / 12);
-            gain.gain.setValueAtTime(0.0001, context.currentTime + index * beat);
-            gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + index * beat + 0.025);
-            gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + index * beat + beat * 0.75);
-            oscillator.connect(gain);
-            gain.connect(context.destination);
-            oscillator.start(context.currentTime + index * beat);
-            oscillator.stop(context.currentTime + index * beat + beat * 0.8);
-          });
-          window.setTimeout(() => {
-            button.disabled = false;
-            button.textContent = "▶ 다시 듣기";
-            context.close();
-          }, notes.length * beat * 1000 + 150);
-        }).catch((error) => {
-          context.close();
-          button.disabled = false;
-          button.textContent = "▶ 들어보기";
-          console.error("멜로디 재생에 실패했습니다.", error);
-          showToast("멜로디 재생을 시작할 수 없어요.");
-        });
-      }
-      document.getElementById("homeButton").addEventListener("click", () => {
-        activeFilter = "all";
-        renderHome();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-      document.getElementById("boardButton").addEventListener("click", () => {
-        if (!activeField) document.getElementById("board")?.scrollIntoView({ behavior: "smooth" });
-        else {
-          renderHome(true);
-        }
-      });
-      renderHome();
-    })();
-  </script>
+<div class="modal" id="modal"><form class="sheet" id="form">
+  <h2>🖼️ 내 작품 올리기</h2>
+  <label class="drop"><input type="file" id="file" accept="image/*" hidden><span id="dropTxt"></span></label>
+  <select id="fCat"></select>
+  <input id="fName" placeholder="이름 또는 별명 (예: 3반 별빛)" maxlength="20" required>
+  <input id="fTitle" placeholder="작품 제목" maxlength="30" required>
+  <textarea id="fDesc" rows="3" placeholder="작품 소개 한마디" maxlength="200"></textarea>
+  <div class="row2"><button type="button" class="btn ghost" id="cancel">취소</button><button class="btn yellow">올리기 🎉</button></div>
+</form></div>
+<div id="toast"></div>
+
+<script>
+const TEACHER_PIN = '1234'; // 게시물 삭제용 선생님 비밀번호 (꼭 바꿔 주세요)
+const mood = ['😆 신나는','🥰 따뜻한','😮 신비로운','😂 웃긴','🌙 잔잔한','⚡ 긴장감 넘치는'];
+const who = ['🐶 강아지','🐱 고양이','🤖 로봇','🦖 공룡','🧚 요정','🧑‍🚀 우주비행사'];
+const where = ['🏫 우리 학교','🌊 바닷속','🚀 우주','🌲 마법의 숲','🍭 과자 나라','🏙️ 미래 도시'];
+const C = {
+ video:{name:'AI 영상',obj:'영상을',emoji:'🎬',main:'#ff6b5b',soft:'#ffe4df',deep:'#d9483a',sub:'움직이는 이야기를 만들어요',tool:['Canva','https://www.canva.com/'],
+  jobs:[
+   {n:'AI 영상 크리에이터',e:'📱',l:'AI와 함께 짧고 재미있는 영상을 기획하고 편집해요.',t:['영상 아이디어 생각하기','AI로 장면·자막 만들기','쇼츠 영상으로 완성하기'],ask:'세로 화면의 10초짜리 재미있는 쇼츠 영상을 만들어 줘.'},
+   {n:'AI 애니메이션 감독',e:'🐰',l:'캐릭터 그림을 AI로 움직이게 해서 만화 영화를 만들어요.',t:['캐릭터와 이야기 정하기','장면마다 움직임 지시하기','목소리·음악 입히기'],ask:'귀여운 3D 애니메이션 스타일의 짧은 장면을 만들어 줘.'},
+   {n:'AI 광고 영상 디렉터',e:'📺',l:'물건이나 장소를 멋지게 알리는 광고 영상을 만들어요.',t:['알리고 싶은 점 찾기','눈길 끄는 장면 만들기','짧은 광고 문구 넣기'],ask:'15초짜리 신나는 광고 영상을 만들어 줘. 마지막에 짧은 광고 문구를 넣어 줘.'},
+   {n:'AI 특수효과 아티스트',e:'🌋',l:'영화 속 마법, 우주, 폭발 같은 특별한 장면을 AI로 만들어요.',t:['진짜 같은 효과 만들기','실제 영상과 합치기','빛과 색 다듬기'],ask:'영화처럼 실감 나는 특수효과가 들어간 장면을 만들어 줘.'}],
+  g:[['누가 나와요?','주인공',who],['어디에서?','장소',where],['무엇을 해요?','행동',['💃 춤을 춰요','🏃 달리기 시합','🍳 요리해요','⚽ 축구해요','🎈 하늘을 날아요','🔍 보물을 찾아요']],['어떤 느낌?','분위기',mood]]},
+ game:{name:'AI 게임',obj:'게임을',emoji:'🎮',main:'#2fbf71',soft:'#ddf7e8',deep:'#1f9555',sub:'나만의 게임 세상을 만들어요',tool:['Gemini','https://gemini.google.com/'],
+  jobs:[
+   {n:'게임 기획자',e:'🧩',l:'게임의 규칙, 목표, 레벨을 생각해서 설계도를 만들어요.',t:['게임 규칙 정하기','레벨 난이도 나누기','재미 포인트 찾기'],ask:'초등학생이 즐길 게임 아이디어를 기획서로 정리해 줘. 규칙, 목표, 레벨 3개를 알려 줘.'},
+   {n:'게임 캐릭터 디자이너',e:'🦸',l:'게임에 나오는 주인공과 친구, 악당을 디자인해요.',t:['성격에 맞는 모습 그리기','표정·동작 만들기','능력 정하기'],ask:'게임 주인공 캐릭터를 그려 줘. 앞모습과 옆모습을 함께 보여 줘.'},
+   {n:'게임 배경 아티스트',e:'🏰',l:'캐릭터가 모험할 멋진 세상과 맵을 그려요.',t:['세계관 상상하기','맵과 배경 그리기','숨은 장소 만들기'],ask:'게임 배경으로 쓸 넓은 맵 그림을 그려 줘.'},
+   {n:'게임 스토리 작가',e:'📜',l:'게임 속 모험 이야기와 퀘스트(임무)를 만들어요.',t:['모험 이야기 쓰기','퀘스트 만들기','캐릭터 대사 쓰기'],ask:'게임 속 퀘스트 이야기를 3단계로 만들어 줘. 단계마다 캐릭터 대사도 넣어 줘.'}],
+  g:[['누가 주인공?','주인공',['🐧 펭귄 기사','🤖 꼬마 로봇','🧙 마법사','🐉 아기 용','🦊 여우 탐정','👧 나 자신']],['어떤 세계?','세계',['🏝️ 보물섬','🏰 구름 위 성','🌋 화산 마을','❄️ 얼음 왕국','🌌 은하계','🧁 디저트 월드']],['미션은?','미션',['💎 보석 모으기','🗝️ 열쇠 찾기','🧱 장애물 피하기','🐾 동물 구하기','🏁 경주 1등','🧠 퀴즈 풀기']],['어떤 스타일?','스타일',['🟦 픽셀 아트','🧸 귀여운 3D','✏️ 손그림','🌈 파스텔','🌃 네온','📚 동화풍']]]},
+ song:{name:'AI 노래',obj:'노래를',emoji:'🎵',main:'#ffaa1d',soft:'#fff1d1',deep:'#d98600',sub:'신나는 나만의 노래를 만들어요',tool:['Suno','https://suno.com/'],
+  jobs:[
+   {n:'AI 작곡가',e:'🎹',l:'AI와 함께 멜로디와 리듬을 만들어 노래를 완성해요.',t:['멜로디 만들기','리듬 정하기','노래 완성하기'],ask:'1분 정도 길이의 노래를 만들어 줘.'},
+   {n:'AI 작사가',e:'✍️',l:'마음을 울리는 노래 가사를 써요.',t:['주제 정하기','1절·후렴 쓰기','운율 맞추기'],ask:'아래 내용으로 1절과 후렴이 있는 노래 가사를 써 줘.'},
+   {n:'음악 프로듀서',e:'🎧',l:'노래의 분위기와 악기를 정해서 멋진 곡으로 다듬어요.',t:['악기 고르기','분위기 맞추기','소리 균형 맞추기'],ask:'분위기와 악기 구성을 정해서 완성된 곡처럼 만들어 줘.'},
+   {n:'배경음악(BGM) 작곡가',e:'🎞️',l:'영상과 게임에 어울리는 배경음악을 만들어요.',t:['장면 분위기 읽기','반복되는 음악 만들기','효과음 어울리게 하기'],ask:'영상이나 게임에 깔릴 30초 배경음악을 만들어 줘. 가사는 없어도 돼.'}],
+  g:[['어떤 장르?','장르',['🎤 K-POP 댄스','🧸 동요','🎸 록','🎷 재즈','🎻 클래식','🎧 힙합']],['무엇에 대한 노래?','주제',['🏫 우리 반 친구','🐶 반려동물','🍕 좋아하는 음식','🌸 봄 소풍','🌠 꿈과 미래','🦸 용기']],['어떤 느낌?','분위기',mood],['어떤 악기?','악기',['🎹 피아노','🥁 드럼','🎸 기타','🎺 트럼펫','🔔 실로폰','🎻 바이올린']]]},
+ art:{name:'AI 그림',obj:'그림을',emoji:'🎨',main:'#8b5cf6',soft:'#ede5ff',deep:'#6a3fd6',sub:'상상을 멋진 그림으로 그려요',tool:['Gemini','https://gemini.google.com/'],
+  jobs:[
+   {n:'AI 일러스트레이터',e:'🖌️',l:'책, 포스터, 광고에 들어갈 멋진 그림을 AI와 함께 그려요.',t:['그림 아이디어 내기','AI로 그림 만들기','색과 구도 다듬기'],ask:'아래 내용으로 멋진 일러스트를 그려 줘.'},
+   {n:'웹툰 작가',e:'💬',l:'칸을 나눠 재미있는 이야기를 만화로 그려요.',t:['이야기 정하기','컷 나누기','말풍선 넣기'],ask:'4컷 웹툰을 그려 줘. 컷마다 말풍선을 넣어 줘.'},
+   {n:'그림책 작가',e:'📖',l:'따뜻한 이야기와 그림으로 그림책을 만들어요.',t:['이야기 쓰기','장면 그리기','책으로 엮기'],ask:'그림책의 한 페이지처럼 따뜻한 그림을 그려 줘.'},
+   {n:'이모티콘 디자이너',e:'😺',l:'메신저에서 쓰는 귀여운 이모티콘 캐릭터를 만들어요.',t:['캐릭터 만들기','여러 표정 그리기','한눈에 보이게 다듬기'],ask:'메신저 이모티콘으로 쓸 귀여운 캐릭터를 그려 줘. 표정 4가지를 보여 줘.'}],
+  g:[['누가 나와요?','주인공',who],['어디에서?','장소',where],['어떤 그림체?','그림 스타일',['🖍️ 크레파스','💧 수채화','🧸 3D 장난감','✏️ 연필 스케치','✂️ 종이 공예','🌈 파스텔']],['어떤 색깔?','색감',['🌈 알록달록','🍑 따뜻한','🫧 시원한','🌙 밤하늘','🍬 달콤한 파스텔','⚫ 흑백']]]}
+};
+
+const $ = s => document.querySelector(s), app = $('#app');
+const KEY = 'kids-ai-board-v1', LIKED = 'kids-ai-liked-v1';
+const load = (k = KEY) => JSON.parse(localStorage.getItem(k) || '[]');
+const save = (a, k = KEY) => localStorage.setItem(k, JSON.stringify(a));
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const vars = c => `--main:${c.main};--soft:${c.soft};--deep:${c.deep}`;
+const art = (src, emo) => `<div class="art"><span class="emo">${emo}</span><img src="${src}" alt="" loading="lazy" onerror="this.remove()"></div>`;
+const steps = n => `<div class="steps">${['분야 고르기','직업 알아보기','AI 실습하기'].map((s,i)=>`<span class="step ${i+1===n?'now':i+1<n?'done':''}">${i+1<n?'✅':['①','②','③'][i]} ${s}</span>`).join('')}</div>`;
+const plain = v => v.replace(/^\S+\s/, '');
+let toastT; const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); };
+
+function render(){
+  const p = location.hash.replace(/^#\/?/, '').split('/');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('on', (p[0]==='board') === (b.dataset.n==='board')));
+  scrollTo(0, 0);
+  if (p[0] === 'board') return board();
+  if (p[0] === 'c' && C[p[1]]) return (p[2] !== undefined && C[p[1]].jobs[p[2]]) ? lab(p[1], +p[2]) : jobs(p[1]);
+  home();
+}
+
+function home(){
+  app.innerHTML = `<section class="hero"><img class="bg" src="images/hero.jpg" alt="카메라, 게임패드, 키보드, 태블릿, 슬레이트를 든 다섯 친구들">
+    <div class="hero-txt"><span class="hi">👋 안녕, 꼬마 크리에이터!</span>
+      <h1>오늘은 어떤<br><em>AI 크리에이터</em>가<br>되어 볼까?</h1>${steps(1)}
+      <button class="btn yellow" id="start">🚀 분야 고르러 가기</button></div>
+    <div class="bubble"><span>나랑 같이 만들어 보자!</span><img src="images/mascot.svg" alt="마스코트 코코"></div></section>
+    <section class="flow">
+      <div><i style="background:#fff1d1">💡</i><span><b>① 내가 생각해요</b><small>재미있는 아이디어 떠올리기</small></span></div>
+      <div><i style="background:#ede5ff">🤖</i><span><b>② AI가 만들어요</b><small>주문서로 AI에게 부탁하기</small></span></div>
+      <div><i style="background:#ddf7e8">✨</i><span><b>③ 내가 다듬어요</b><small>고치고 꾸며서 내 작품 완성</small></span></div></section>
+    <h2 class="sec-title" id="pick">🎯 어떤 분야가 궁금해? <small>16가지 직업이 기다려요</small></h2>
+    <section class="pick">${Object.entries(C).map(([k,c]) => `<a class="big" href="#/c/${k}" style="${vars(c)}">
+      <span class="tag">${c.emoji} ${c.name}</span><span class="count">직업 4개</span>
+      <div class="mosaic">${c.jobs.map((j,i) => art(`images/${k}-job${i+1}.jpg`, j.e)).join('')}</div>
+      <div class="txt"><div><h2>${c.name}</h2><p>${c.sub}</p></div><span class="go">→</span></div></a>`).join('')}</section>`;
+  $('#start').onclick = () => $('#pick').scrollIntoView({behavior:'smooth'});
+}
+
+function jobs(k){
+  const c = C[k];
+  app.innerHTML = `<div style="${vars(c)}">${steps(2)}<a class="nav-btn back" href="#/">← 처음으로</a>
+    <section class="band">${art(`images/${k}-job1.jpg`, c.emoji)}<div><span class="badge">${c.emoji} ${c.name}</span><h1>AI로 ${c.obj} 만드는 사람들</h1>
+    <p>궁금한 직업을 눌러 보세요! 그 직업이 되어 AI 실습을 할 수 있어요.</p>
+    <div class="faces">${c.jobs.map((j,i) => `<img src="images/${k}-job${i+1}.jpg" alt="${j.n}">`).join('')}</div></div></section>
+    <section class="jobs">${c.jobs.map((j,i) => `<a class="job" href="#/c/${k}/${i}"><div class="pic"><span class="no">${i+1}</span>${art(`images/${k}-job${i+1}.jpg`, j.e)}</div>
+      <div class="body"><h3>${j.n}</h3><p>${j.l}</p><ul>${j.t.map(x=>`<li>${x}</li>`).join('')}</ul>
+      <span class="cta">이 직업으로 실습하기 →</span></div></a>`).join('')}</section></div>`;
+}
+
+function lab(k, i){
+  const c = C[k], j = c.jobs[i], sel = {};
+  app.innerHTML = `<div style="${vars(c)}">${steps(3)}<a class="nav-btn back" href="#/c/${k}">← 직업 다시 고르기</a>
+    <section class="band">${art(`images/${k}-job${i+1}.jpg`, j.e)}<div><span class="badge">${c.emoji} ${c.name} · AI 실습</span>
+    <h1>오늘 나는 ${j.n}!</h1><p>카드를 골라서 AI에게 보낼 <b>주문서(프롬프트)</b>를 만들어 보세요.</p></div></section>
+    <section class="lab"><div class="panel">
+      ${c.g.map(([t,key,opts],gi) => `<div class="group"><h3><span class="num">${gi+1}</span>${t}</h3>
+        <div class="chips" data-g="${key}">${opts.map(o=>`<button class="chip" data-v="${o}">${o}</button>`).join('')}</div></div>`).join('')}
+      <div class="group"><h3><span class="num">${c.g.length+1}</span>더 넣고 싶은 내용 (자유롭게!)</h3>
+        <textarea id="extra" rows="3" placeholder="예) 주인공이 빨간 모자를 쓰고 있어요"></textarea></div>
+    </div>
+    <aside class="panel sticky"><h3>🪄 나의 AI 주문서</h3><div class="prompt" id="out"></div>
+      <button class="btn" id="copy">📋 주문서 복사하기</button>
+      <a class="btn ghost" href="${c.tool[1]}" target="_blank" rel="noopener">🚀 ${c.tool[0]} 열기</a>
+      <button class="btn yellow" id="up">🖼️ 완성 작품 게시판에 올리기</button>
+      <p class="tip">💡 카드 고르기 → 복사하기 → AI 도구에 붙여넣기 → 완성 작품 저장 → 게시판에 올리기</p>
+    </aside></section></div>`;
+  const upd = () => {
+    const lines = c.g.filter(([,key]) => sel[key]).map(([,key]) => `- ${key}: ${plain(sel[key])}`);
+    const ex = $('#extra').value.trim(); if (ex) lines.push(`- 추가: ${ex}`);
+    const txt = lines.length ? `${j.ask}\n${lines.join('\n')}` : '';
+    $('#out').textContent = txt || '👈 왼쪽에서 카드를 골라 보세요!';
+    return txt;
+  };
+  app.querySelectorAll('.chips').forEach(g => g.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const on = b.classList.contains('sel');
+    g.querySelectorAll('.chip').forEach(x => x.classList.remove('sel'));
+    if (on) delete sel[g.dataset.g]; else { b.classList.add('sel'); sel[g.dataset.g] = b.dataset.v; }
+    upd();
+  }));
+  $('#extra').addEventListener('input', upd); upd();
+  $('#copy').onclick = () => { const t = upd(); if (!t) return toast('카드를 먼저 골라 주세요!');
+    navigator.clipboard.writeText(t).then(() => toast('복사 완료! AI 도구에 붙여넣어 보세요 ✨')).catch(() => toast('글자를 길게 눌러 복사해 주세요')); };
+  $('#up').onclick = () => openUpload(k, i, upd());
+}
+
+let filt = 'all';
+function board(){
+  const list = load(), liked = load(LIKED), shown = list.filter(p => filt === 'all' || p.k === filt);
+  const cats = [['all','🌟 전체'], ...Object.entries(C).map(([k,c]) => [k, `${c.emoji} ${c.name}`])];
+  app.innerHTML = `<section class="board-head"><div><h1>🏆 우리들의 AI 작품 전시관</h1>
+    <p>친구들이 AI와 함께 만든 작품을 구경하고 ❤️로 응원해 주세요!</p></div>
+    <button class="btn yellow" id="up2">✏️ 작품 올리기</button></section>
+    <div class="filters">${cats.map(([k,t]) => `<button class="chip ${filt===k?'sel':''}" data-f="${k}">${t} (${k==='all'?list.length:list.filter(p=>p.k===k).length})</button>`).join('')}</div>
+    <section class="posts">${shown.length ? shown.map(p => post(p, liked.includes(p.id))).join('') : `<div class="empty">아직 작품이 없어요 🥲<br>첫 번째 작품의 주인공이 되어 보세요!</div>`}</section>`;
+}
+function post(p, isLiked){
+  const c = C[p.k] || C.art;
+  return `<article class="post" style="${vars(c)}">${p.img ? `<img src="${p.img}" alt="${esc(p.title)}">` : `<div class="noimg">${c.emoji}</div>`}
+    <div class="pb"><span class="badge">${c.emoji} ${esc(p.j || c.name)}</span><h3>${esc(p.title)}</h3>
+    <div class="by">✏️ ${esc(p.name)} · ${esc(p.date)}</div>${p.desc ? `<p>${esc(p.desc)}</p>` : ''}
+    ${p.prompt ? `<details><summary>🪄 사용한 주문서 보기</summary><pre>${esc(p.prompt)}</pre></details>` : ''}
+    <div class="row"><button class="like ${isLiked?'done':''}" data-like="${p.id}">❤️ ${p.likes}</button><button class="del" data-del="${p.id}">삭제</button></div></div></article>`;
+}
+app.addEventListener('click', e => {
+  const t = e.target.closest('[data-f],[data-like],[data-del],#up2'); if (!t) return;
+  if (t.dataset.f) { filt = t.dataset.f; return board(); }
+  if (t.id === 'up2') return openUpload(filt === 'all' ? 'video' : filt, null, '');
+  const list = load();
+  if (t.dataset.like) {
+    const id = +t.dataset.like, liked = load(LIKED), p = list.find(x => x.id === id);
+    if (liked.includes(id)) return toast('이미 응원했어요 💖');
+    p.likes++; liked.push(id); save(list); save(liked, LIKED); return board();
+  }
+  if (t.dataset.del) {
+    if (prompt('선생님 비밀번호를 입력하세요') !== TEACHER_PIN) return toast('비밀번호가 달라요');
+    save(list.filter(x => x.id !== +t.dataset.del)); board(); toast('삭제했어요');
+  }
+});
+
+let draft = {}, img = '';
+$('#fCat').innerHTML = Object.entries(C).map(([k,c]) => `<option value="${k}">${c.emoji} ${c.name}</option>`).join('');
+function openUpload(k, i, prompt){
+  draft = {k, i, prompt}; img = ''; $('#form').reset(); $('#fCat').value = k;
+  $('#dropTxt').innerHTML = '📷 여기를 눌러 작품 이미지를 골라요';
+  $('#modal').classList.add('open');
+}
+$('#cancel').onclick = () => $('#modal').classList.remove('open');
+$('#file').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { const im = new Image(); im.onload = () => {
+    const s = Math.min(1, 900 / Math.max(im.width, im.height)), cv = document.createElement('canvas');
+    cv.width = im.width * s; cv.height = im.height * s; cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+    img = cv.toDataURL('image/jpeg', .75); $('#dropTxt').innerHTML = `<img src="${img}">`;
+  }; im.src = r.result; };
+  r.readAsDataURL(f);
+};
+$('#form').onsubmit = e => {
+  e.preventDefault();
+  const k = $('#fCat').value, list = load();
+  const j = (draft.i !== null && draft.k === k) ? C[k].jobs[draft.i].n : C[k].name;
+  list.unshift({id: Date.now(), k, j, name: $('#fName').value.trim(), title: $('#fTitle').value.trim(), desc: $('#fDesc').value.trim(),
+    prompt: draft.prompt || '', img, date: new Date().toLocaleDateString('ko-KR'), likes: 0});
+  try { save(list); } catch (err) { return toast('저장 공간이 꽉 찼어요. 더 작은 이미지를 골라 주세요'); }
+  $('#modal').classList.remove('open'); filt = 'all'; toast('게시판에 올렸어요! 🎉'); location.hash = '#/board';
+};
+addEventListener('hashchange', render); render();
+</script>
 </body>
 </html>
