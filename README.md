@@ -22,22 +22,17 @@ powershell -ExecutionPolicy Bypass -File .\start.ps1
 
 ## 공개 데모와 Gemini 연결
 
-GitHub Pages는 HTML만 실행하므로 모델 호출은 Supabase Edge Function `ai-generate`가 처리합니다. Gemini API 키는 Supabase 비밀 환경 변수에만 저장합니다. 브라우저에 배포되는 Supabase 프로젝트 URL과 legacy `anon` 키는 공개 클라이언트 설정이며, Gemini 비밀 키와 다릅니다.
+GitHub Pages는 HTML만 실행하므로 모델 호출은 Supabase Edge Function `ai-generate`가 처리합니다. Gemini API 키는 Supabase 비밀 환경 변수에만 저장합니다. 브라우저에는 Supabase 프로젝트 URL, 공개 legacy `anon` JWT, publishable API 키만 설정하며, Gemini 비밀 키와 다릅니다.
 
 ### 공개 페이지의 Gemini 백엔드 설정
 
 1. 먼저 이전에 채팅/이미지에 올린 Gemini 키를 Google AI Studio에서 폐기하고 새 키를 발급합니다. 새 키는 채팅에 보내거나 저장소 파일에 넣지 마세요.
-2. [Supabase](https://database.new/)에서 프로젝트를 만듭니다. Windows에 Node.js 18 이상과 GitHub CLI가 설치되어 있고 `gh auth login`이 완료되어 있어야 합니다.
-3. Supabase 대시보드의 [Account > Access Tokens](https://supabase.com/dashboard/account/tokens)에서 Personal Access Token을 발급합니다. 토큰은 여기 채팅에 공유하지 마세요.
+2. 사용할 Supabase 프로젝트를 준비합니다. Windows에 Node.js 18 이상과 GitHub CLI가 설치되어 있어야 합니다.
+3. Windows에 Node.js 18 이상과 GitHub CLI를 설치하고 GitHub와 Supabase CLI에 로그인합니다(`gh auth login`, `npx supabase@latest login`). 인증 토큰을 채팅이나 저장소 파일에 넣지 마세요.
 
-```powershell
-git push
-```
-
-4. PowerShell에서 이 폴더로 이동해 `.\deploy-supabase.ps1`을 실행합니다. Supabase Personal Access Token은 가려진 입력란에 입력합니다. 프로젝트 reference는 기본값으로 현재 생성된 프로젝트를 사용합니다. 스크립트는 프로젝트 접근 권한을 확인하고, **공개** legacy `anon` 키를 물어본 뒤 대시보드 SQL Editor를 엽니다.
-5. 스크립트가 안내하는 `supabase/migrations/20261019000000_ai_generation_limits.sql`의 전체 내용을 SQL Editor에서 실행하고, 성공한 후 스크립트에 `YES`라고 입력합니다.
-6. 새 Gemini 키를 스크립트의 숨김 입력란에 입력합니다. 스크립트는 Edge Function을 배포하고 키를 Supabase secret `GEMINI_API_KEY`로 설정합니다. 임시 키 파일은 작업 후 삭제됩니다. Supabase access token과 Gemini 키는 채팅·HTML·저장소에 넣지 마세요.
-7. 스크립트는 백엔드 상태를 확인하고, 공개 Supabase URL/anon 키를 GitHub Actions 변수로 등록해 Pages 재배포를 시작합니다. 배포 후 [공개 사이트](https://mieunjung.github.io/ai-contents-designer/)의 네 가지 만들기 화면에 Gemini 연결 완료가 표시됩니다.
+4. PowerShell에서 이 폴더로 이동해 `.\deploy-supabase.ps1`을 실행합니다. 프로젝트 reference는 기본값으로 현재 프로젝트를 사용합니다. 스크립트가 SQL 마이그레이션을 적용하고 AI 함수를 배포합니다.
+5. Google AI Studio에서 새 Gemini 키를 발급하고, 스크립트의 숨김 입력란에 입력합니다. 키는 Supabase secret `GEMINI_API_KEY`로 설정되며 임시 파일은 작업 후 삭제됩니다. Gemini 키는 채팅·HTML·저장소에 넣지 마세요.
+6. 스크립트가 Supabase의 공개 URL과 API 키를 GitHub Actions 변수로 등록해 Pages 배포를 시작합니다. 배포 후 [공개 사이트](https://mieunjung.github.io/ai-contents-designer/)의 네 가지 만들기 화면에 Gemini 연결 완료가 표시됩니다.
 
 Supabase의 무료 사용량과 Gemini 무료 티어는 계정, 지역, 현재 제공 정책에 따라 달라질 수 있으며 무제한 보장이 아닙니다. 이 함수는 IP 해시 기준 하루 8회, 전체 합계 하루 100회의 생성 한도를 둡니다. SQL 마이그레이션을 적용하지 않으면 생성을 fail-closed로 거부합니다. 실제 노래 음원이나 가수 목소리를 생성하지 않고, 새 가사와 16음의 짧은 브라우저 합성 멜로디를 만듭니다.
 

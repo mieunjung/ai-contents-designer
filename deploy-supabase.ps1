@@ -29,18 +29,6 @@ if ($ghCommand) {
   throw "Install GitHub CLI and sign in with 'gh auth login' before deploying."
 }
 
-$originalAccessToken = $env:SUPABASE_ACCESS_TOKEN
-$accessToken = Read-Host "Supabase Personal Access Token (Dashboard > Account > Access Tokens; input is hidden)" -AsSecureString
-$accessTokenPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($accessToken)
-$plainAccessToken = $null
-
-try {
-  $plainAccessToken = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($accessTokenPointer)
-  if ([string]::IsNullOrWhiteSpace($plainAccessToken)) {
-    throw "A Supabase Personal Access Token is required."
-  }
-  $env:SUPABASE_ACCESS_TOKEN = $plainAccessToken
-
 $projectRefInput = Read-Host "Supabase project reference (Enter accepts $defaultProjectRef)"
 $projectRef = if ([string]::IsNullOrWhiteSpace($projectRefInput)) { $defaultProjectRef } else { $projectRefInput.Trim() }
 if ($projectRef -notmatch '^[a-zA-Z0-9-]{8,40}$') {
@@ -54,19 +42,14 @@ if ((@($projects) -join "`n") -notmatch [regex]::Escape($projectRef)) {
   throw "The signed-in Supabase account cannot access project $projectRef."
 }
 
-$publishableKey = Read-Host "Supabase legacy anon public key (Settings > API Keys > Legacy API keys; public, not secret)"
-if ($publishableKey -notmatch '^eyJ') {
-  throw "Use the project's legacy anon JWT key so the Edge Function JWT verification works."
+$apiKeys = Invoke-SupabaseCli projects api-keys --project-ref $projectRef --output json | ConvertFrom-Json
+$anonKey = @($apiKeys | Where-Object { $_.type -eq "legacy" -and $_.name -eq "anon" })[0].api_key
+$publishableKey = @($apiKeys | Where-Object { $_.type -eq "publishable" })[0].api_key
+if ($anonKey -notmatch '^eyJ' -or $publishableKey -notmatch '^sb_publishable_') {
+  throw "The project's legacy anon and publishable public API keys could not be identified."
 }
 
-Write-Host ""
-Write-Host "Before continuing, apply this SQL migration in the Supabase SQL Editor:"
-Write-Host (Join-Path $PSScriptRoot "supabase\migrations\20261019000000_ai_generation_limits.sql")
-Start-Process "https://supabase.com/dashboard/project/$projectRef/sql/new"
-$migrationReady = Read-Host "Paste and run the migration SQL. Type YES after it succeeds"
-if ($migrationReady -cne "YES") {
-  throw "The migration was not confirmed; nothing was deployed."
-}
+Invoke-SupabaseCli db push --project-ref $projectRef --yes
 
 Write-Host "Sign in to Supabase if prompted. The Gemini key is entered privately and sent only to Supabase."
 $geminiKey = Read-Host "Enter your newly rotated Gemini API key (input is hidden)" -AsSecureString
@@ -94,24 +77,20 @@ try {
 
 $headers = @{
   apikey = $publishableKey
-  Authorization = "Bearer $publishableKey"
+  Authorization = "Bearer $anonKey"
 }
+$headers.Authorization = "Bearer $anonKey"
 $health = Invoke-RestMethod -Uri "$projectUrl/functions/v1/ai-generate" -Headers $headers
 if (-not $health.configured) {
   throw "The function is deployed, but it did not report a configured Gemini key."
 }
 
 Invoke-GitHubCli variable set SUPABASE_URL --repo $repo --body $projectUrl
-Invoke-GitHubCli variable set SUPABASE_ANON_KEY --repo $repo --body $publishableKey
+Invoke-GitHubCli variable set SUPABASE_ANON_KEY --repo $repo --body $anonKey
+Invoke-GitHubCli variable set SUPABASE_PUBLISHABLE_KEY --repo $repo --body $publishableKey
 Invoke-GitHubCli workflow run "Deploy AI Contents designer" --repo $repo
 
 Write-Host ""
 Write-Host "Gemini backend is responding. GitHub Pages deployment has started."
 Write-Host "Site: $siteUrl"
-Write-Host "The Supabase URL and anon key are public app configuration; the Gemini key stays on Supabase."
-} finally {
-  $env:SUPABASE_ACCESS_TOKEN = $originalAccessToken
-  $plainAccessToken = $null
-  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($accessTokenPointer)
-  $accessToken.Dispose()
-}
+Write-Host "The Supabase URL, anon JWT, and publishable key are public app configuration; the Gemini key stays on Supabase."

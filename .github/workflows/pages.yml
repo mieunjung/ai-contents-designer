@@ -29,10 +29,11 @@ jobs:
         run: |
           mkdir _site
           cp index.html _site/index.html
-          SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" node -e "const fs=require('node:fs');fs.writeFileSync('_site/supabase-config.js','window.AI_CONTENTS_CONFIG = '+JSON.stringify({url:process.env.SUPABASE_URL||'',anonKey:process.env.SUPABASE_ANON_KEY||''})+';\\n')"
+          SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" node -e "const fs=require('node:fs');fs.writeFileSync('_site/supabase-config.js','window.AI_CONTENTS_CONFIG = '+JSON.stringify({url:process.env.SUPABASE_URL||'',anonKey:process.env.SUPABASE_ANON_KEY||'',publishableKey:process.env.SUPABASE_PUBLISHABLE_KEY||''})+';\\n')"
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:

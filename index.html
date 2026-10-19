@@ -245,6 +245,7 @@
       const supabaseConfig = window.AI_CONTENTS_CONFIG || {};
       const supabaseUrl = typeof supabaseConfig.url === "string" ? supabaseConfig.url.replace(/\/+$/, "") : "";
       const supabaseAnonKey = typeof supabaseConfig.anonKey === "string" ? supabaseConfig.anonKey : "";
+      const supabasePublishableKey = typeof supabaseConfig.publishableKey === "string" ? supabaseConfig.publishableKey : "";
       let activeField = null;
       let currentPreview = null;
       let activeFilter = "all";
@@ -394,10 +395,10 @@
       }
       async function checkApiStatus(key) {
         const status = document.getElementById("apiStatus");
-        if (supabaseUrl && supabaseAnonKey) {
+        if (supabaseUrl && supabaseAnonKey && supabasePublishableKey) {
           try {
             const response = await fetch(`${supabaseUrl}/functions/v1/ai-generate`, {
-              headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` }
+              headers: { apikey: supabasePublishableKey, Authorization: `Bearer ${supabaseAnonKey}` }
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.configured) throw new Error(data.error || "Gemini 키가 설정되지 않았어요.");
@@ -433,14 +434,14 @@
       async function generateWithGemini(category, idea) {
         let response;
         try {
-          response = await fetch(supabaseUrl && supabaseAnonKey
+          response = await fetch(supabaseUrl && supabaseAnonKey && supabasePublishableKey
             ? `${supabaseUrl}/functions/v1/ai-generate`
             : "/api/generate", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              ...(supabaseUrl && supabaseAnonKey ? {
-                apikey: supabaseAnonKey,
+              ...(supabaseUrl && supabaseAnonKey && supabasePublishableKey ? {
+                apikey: supabasePublishableKey,
                 Authorization: `Bearer ${supabaseAnonKey}`
               } : {})
             },
