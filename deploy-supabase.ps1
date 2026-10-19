@@ -10,10 +10,22 @@ function Invoke-SupabaseCli {
   }
 }
 
+function Invoke-GitHubCli {
+  & $script:ghExecutable @args
+  if ($LASTEXITCODE -ne 0) {
+    throw "GitHub CLI request failed. Run 'gh auth login' and verify repository access."
+  }
+}
+
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
   throw "Install Node.js 18 or newer before deploying."
 }
-if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+ $ghCommand = Get-Command gh -ErrorAction SilentlyContinue
+if ($ghCommand) {
+  $script:ghExecutable = $ghCommand.Source
+} elseif (Test-Path -LiteralPath (Join-Path $env:LOCALAPPDATA "copilot-desktop-gh-2.102.0\gh.exe")) {
+  $script:ghExecutable = Join-Path $env:LOCALAPPDATA "copilot-desktop-gh-2.102.0\gh.exe"
+} else {
   throw "Install GitHub CLI and sign in with 'gh auth login' before deploying."
 }
 
@@ -89,12 +101,9 @@ if (-not $health.configured) {
   throw "The function is deployed, but it did not report a configured Gemini key."
 }
 
-gh variable set SUPABASE_URL --repo $repo --body $projectUrl
-if ($LASTEXITCODE -ne 0) { throw "Could not save the public Supabase URL as a GitHub Actions variable." }
-gh variable set SUPABASE_ANON_KEY --repo $repo --body $publishableKey
-if ($LASTEXITCODE -ne 0) { throw "Could not save the public Supabase anon key as a GitHub Actions variable." }
-gh workflow run "Deploy AI Contents designer" --repo $repo
-if ($LASTEXITCODE -ne 0) { throw "Could not start the GitHub Pages deployment." }
+Invoke-GitHubCli variable set SUPABASE_URL --repo $repo --body $projectUrl
+Invoke-GitHubCli variable set SUPABASE_ANON_KEY --repo $repo --body $publishableKey
+Invoke-GitHubCli workflow run "Deploy AI Contents designer" --repo $repo
 
 Write-Host ""
 Write-Host "Gemini backend is responding. GitHub Pages deployment has started."
