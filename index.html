@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fffaf0">
+  <title>AI Contents designer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #25324a;
+      --muted: #69758a;
+      --paper: #fffdf8;
+      --line: #eee8dc;
+      --purple: #8063e8;
+      --pink: #ff8fa3;
+      --yellow: #ffcb58;
+      --mint: #74d8bc;
+      --blue: #74b8f2;
+      --shadow: 0 16px 45px rgba(59, 54, 91, .10);
+      font-family: "Trebuchet MS", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(ellipse at 8% 6%, rgba(255, 223, 147, .23), transparent 26rem),
+        radial-gradient(ellipse at 95% 12%, rgba(208, 194, 255, .24), transparent 27rem),
+        #fffaf2;
+      color: var(--ink);
+    }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(128, 99, 232, .45);
+      outline-offset: 3px;
+    }
+    .shell { width: min(1120px, calc(100% - 40px)); margin: auto; }
+    header { height: 78px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: -.03em; }
+    .brand-bot { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 13px; background: #eee8ff; font-size: 21px; }
+    .nav-actions { display: flex; gap: 9px; }
+    .quiet-button, .back-button {
+      border: 1px solid var(--line); border-radius: 999px; padding: 10px 15px;
+      background: rgba(255,255,255,.76); color: var(--ink); font-weight: 800;
+    }
+    .quiet-button:hover, .back-button:hover { border-color: #c9bdfa; background: white; }
+    main { min-height: calc(100vh - 145px); padding-bottom: 50px; }
+    .hero {
+      position: relative; overflow: hidden; min-height: 340px; margin: 22px 0 34px;
+      display: grid; grid-template-columns: 1.2fr .8fr; align-items: center;
+      padding: 48px 7%; border: 1px solid rgba(255,255,255,.9); border-radius: 34px;
+      background: linear-gradient(115deg, #fff0cc 0%, #fff2f3 48%, #f0eaff 100%);
+      box-shadow: var(--shadow);
+    }
+    .hero::before, .hero::after { content: "✦"; position: absolute; color: #f3b947; opacity: .8; }
+    .hero::before { right: 42%; top: 18%; font-size: 22px; }
+    .hero::after { right: 8%; top: 18%; font-size: 16px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,.75); color: #7856d9; font-size: 12px; font-weight: 900; }
+    h1 { max-width: 570px; margin: 17px 0 13px; font-size: clamp(37px, 6vw, 65px); line-height: .98; letter-spacing: -.065em; }
+    .hero-copy { max-width: 435px; color: #5d6678; font-size: 16px; line-height: 1.75; }
+    .hero-visual { display: grid; place-items: center; min-height: 220px; }
+    .bot-scene { position: relative; width: 220px; height: 205px; display: grid; place-items: center; }
+    .bot-orbit { position: absolute; width: 190px; height: 190px; border: 2px dashed rgba(128,99,232,.25); border-radius: 50%; }
+    .big-bot { z-index: 1; width: 133px; height: 122px; border-radius: 38px 38px 32px 32px; background: linear-gradient(145deg, #a993ff, #8063e8); border: 6px solid #fff; box-shadow: 0 16px 26px rgba(93,71,177,.22); position: relative; transform: rotate(-4deg); }
+    .big-bot::before { content: ""; position: absolute; width: 83px; height: 43px; left: 19px; top: 30px; border-radius: 22px; background: #fff; }
+    .big-bot::after { content: "●   ●"; white-space: pre; position: absolute; color: #6451ad; left: 38px; top: 39px; font-size: 14px; letter-spacing: 5px; }
+    .antenna { position: absolute; width: 7px; height: 23px; left: 62px; top: -24px; background: #8063e8; border-radius: 8px; }
+    .antenna::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #ffcb58; top: -9px; left: -4px; }
+    .cheek { position: absolute; width: 13px; height: 7px; border-radius: 50%; background: #ff9bad; top: 80px; left: 24px; }
+    .cheek.right { left: auto; right: 24px; }
+    .floaty { position: absolute; font-size: 31px; }
+    .floaty.one { top: 8px; left: 1px; }.floaty.two { bottom: 5px; right: 1px; }.floaty.three { top: 31px; right: 8px; font-size: 22px; }
+    .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin: 0 3px 17px; }
+    .section-heading h2 { margin: 0 0 6px; font-size: 25px; letter-spacing: -.04em; }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 14px; }
+    .count-pill { background: #f0eaff; color: #7055d4; padding: 8px 12px; border-radius: 999px; font-weight: 900; font-size: 12px; white-space: nowrap; }
+    .career-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+    .career-card {
+      min-height: 230px; border: 1px solid rgba(255,255,255,.9); border-radius: 25px; padding: 20px;
+      text-align: left; color: var(--ink); box-shadow: 0 9px 26px rgba(59,54,91,.07);
+      transition: transform .2s, box-shadow .2s; position: relative; overflow: hidden;
+    }
+    .career-card:hover { transform: translateY(-5px) rotate(-.5deg); box-shadow: var(--shadow); }
+    .career-card::after { content: ""; position: absolute; width: 130px; height: 130px; border-radius: 50%; right: -37px; top: -40px; background: rgba(255,255,255,.35); }
+    .career-card.game { background: #e7f7ef; }.career-card.video { background: #fff0ed; }
+    .career-card.song { background: #fff4d9; }.career-card.art { background: #eeeaff; }
+    .card-icon { width: 68px; height: 68px; display: grid; place-items: center; border-radius: 22px; background: rgba(255,255,255,.75); font-size: 36px; margin-bottom: 19px; }
+    .card-title { display: block; font-size: 19px; font-weight: 900; margin-bottom: 6px; letter-spacing: -.04em; }
+    .card-description { color: #69758a; font-size: 12px; line-height: 1.55; }
+    .card-arrow { position: absolute; right: 19px; bottom: 17px; font-weight: 900; color: #7862c7; }
+    .board-section { margin-top: 55px; }
+    .board-tools { display: flex; gap: 8px; }
+    .filter-button { border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; background: #fff; color: var(--muted); font-weight: 800; font-size: 12px; }
+    .filter-button.active { background: var(--ink); color: white; border-color: var(--ink); }
+    .board-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .post-card { min-height: 185px; padding: 18px; background: var(--paper); border: 1px solid var(--line); border-radius: 21px; box-shadow: 0 7px 20px rgba(59,54,91,.045); }
+    .post-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .post-category { border-radius: 999px; padding: 6px 9px; background: #f0eaff; color: #7157cc; font-size: 11px; font-weight: 900; }
+    .post-card[data-category="game"] .post-category { background: #e7f7ef; color: #39896c; }
+    .post-card[data-category="video"] .post-category { background: #fff0ed; color: #dc7168; }
+    .post-card[data-category="song"] .post-category { background: #fff4d9; color: #a47a20; }
+    .post-date { color: #9ba3af; font-size: 11px; }
+    .post-card h3 { margin: 14px 0 7px; font-size: 17px; }
+    .post-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .empty-board { grid-column: 1/-1; text-align: center; padding: 35px; color: var(--muted); border: 1px dashed #ded7ca; border-radius: 20px; background: rgba(255,255,255,.5); }
+    .detail-page { padding-top: 22px; }
+    .detail-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .detail-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: 20px; align-items: start; }
+    .info-panel, .studio-panel { border-radius: 28px; border: 1px solid rgba(255,255,255,.95); box-shadow: var(--shadow); background: white; padding: clamp(21px, 4vw, 34px); }
+    .info-panel { position: sticky; top: 18px; }
+    .field-badge { font-size: 52px; margin-bottom: 10px; }
+    .info-panel h2 { margin: 0 0 10px; font-size: clamp(27px, 4vw, 38px); letter-spacing: -.055em; }
+    .info-panel > p { color: var(--muted); line-height: 1.75; }
+    .job-box { margin-top: 22px; padding: 18px; border-radius: 19px; background: #f7f4ff; }
+    .job-box h3 { margin: 0 0 8px; font-size: 14px; }.job-box p { margin: 0; font-size: 13px; color: #657086; line-height: 1.7; }
+    .sparkle-note { margin-top: 15px; color: #735bc7; font-size: 12px; font-weight: 800; line-height: 1.65; }
+    .studio-panel h2 { margin: 0 0 5px; font-size: 23px; }.studio-panel .intro { margin: 0 0 22px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .field { display: block; margin: 15px 0; }
+    .field label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 900; }
+    .field input, .field textarea { width: 100%; padding: 12px 14px; border-radius: 13px; border: 1px solid #e9e5de; background: #fffdfa; color: var(--ink); }
+    .field textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
+    .prompt-hint { margin-top: 6px; color: #8992a1; font-size: 11px; }
+    .primary-button { width: 100%; border: 0; border-radius: 14px; padding: 14px 16px; color: white; background: linear-gradient(100deg, #8063e8, #a184ee); font-weight: 900; box-shadow: 0 7px 16px rgba(128,99,232,.22); }
+    .primary-button:hover { filter: brightness(1.05); }
+    .preview-box { margin-top: 18px; padding: 17px; border: 1px dashed #d9d1f5; border-radius: 18px; background: #faf8ff; }
+    .preview-box[hidden] { display: none; }.preview-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .preview-head strong { font-size: 13px; }.demo-label { color: #8063e8; font-size: 10px; font-weight: 900; }
+    .preview-output { color: #5f6b80; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .preview-visual { margin: 10px 0; min-height: 80px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(120deg,#e9f8f4,#f0eaff); font-size: 35px; }
+    .api-status { display: flex; gap: 8px; align-items: flex-start; margin: 14px 0; padding: 11px 13px; border-radius: 13px; background: #f3f5fa; color: #68758b; font-size: 12px; line-height: 1.55; }
+    .api-status.ready { background: #eaf8f1; color: #347b61; }.api-status.error { background: #fff0ed; color: #b65349; }
+    .loading-dots { display: inline-block; animation: loading-pulse 1s infinite alternate; }
+    @keyframes loading-pulse { to { opacity: .35; } }
+    .preview-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .preview-actions button { flex: 1; border: 1px solid #ded8f2; border-radius: 11px; padding: 10px; background: white; color: #6f59c0; font-size: 12px; font-weight: 900; }
+    .game-demo { margin-top: 12px; padding: 16px; border-radius: 15px; background: #e9f8f1; text-align: center; }
+    .game-demo button { border: 0; border-radius: 999px; background: white; padding: 11px 16px; font-weight: 900; color: #39896c; }
+    .game-score { display: block; margin: 9px 0 0; font-size: 12px; color: #537365; }
+    .audio-demo { margin-top: 10px; border: 1px solid #eee5cd; border-radius: 13px; padding: 11px; background: #fffaf0; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+    .audio-demo button { border: 0; border-radius: 999px; padding: 8px 10px; background: #ffcb58; color: #664c14; font-weight: 900; }
+    .toast { position: fixed; z-index: 10; bottom: 24px; left: 50%; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 12px 18px; background: #25324a; color: white; border-radius: 999px; font-size: 13px; font-weight: 800; transition: .2s; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    footer { border-top: 1px solid rgba(238,232,220,.8); padding: 20px 0 28px; text-align: center; color: #8a93a2; font-size: 11px; line-height: 1.7; }
+    @media (max-width: 850px) {
+      .career-grid { grid-template-columns: repeat(2, 1fr); }
+      .detail-layout { grid-template-columns: 1fr; }.info-panel { position: static; }
+      .board-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero { padding: 38px 6%; }.hero-visual { transform: scale(.85); }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 26px, 480px); }
+      header { height: 65px; }.brand { font-size: 13px; }.brand-bot { width: 31px; height: 31px; }
+      .quiet-button { padding: 9px 11px; font-size: 12px; }
+      .hero { grid-template-columns: 1fr; min-height: auto; padding: 30px 25px 10px; margin: 15px 0 29px; border-radius: 26px; }
+      .hero-copy { font-size: 14px; }.hero-visual { min-height: 160px; transform: scale(.75); margin-top: -8px; }
+      .career-grid { gap: 10px; }.career-card { min-height: 192px; padding: 15px; border-radius: 20px; }
+      .card-icon { width: 57px; height: 57px; font-size: 30px; margin-bottom: 14px; border-radius: 18px; }
+      .card-title { font-size: 16px; }.card-description { font-size: 11px; }
+      .section-heading h2 { font-size: 21px; }.section-heading p { font-size: 12px; }
+      .board-section { margin-top: 42px; }.board-grid { grid-template-columns: 1fr; }
+      .section-heading.board-heading { align-items: start; flex-direction: column; }
+      .detail-toolbar { gap: 8px; }.detail-layout { gap: 13px; }
+      .info-panel, .studio-panel { border-radius: 22px; padding: 21px; }
+      .post-card { min-height: 145px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <header class="shell">
+    <div class="brand"><span class="brand-bot" aria-hidden="true">🤖</span><span>꼬마 AI 창작 연구소</span></div>
+    <nav class="nav-actions" aria-label="주 메뉴">
+      <button class="quiet-button" id="homeButton" type="button">🏠 처음으로</button>
+      <button class="quiet-button" id="boardButton" type="button">📌 작품 게시판</button>
+    </nav>
+  </header>
+  <main class="shell" id="app"></main>
+  <footer class="shell">
+    <strong>AI Contents designer</strong> · 아이디어는 내가, 멋진 상상은 함께!<br>
+    게임·노래 아이디어는 Gemini Flash-Lite로 만들고, 게시물은 이 기기의 브라우저에 저장돼요. 영상·그림 제작은 체험용 예시입니다.
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    (() => {
+      const fields = {
+        game: {
+          title: "AI로 만드는 게임", job: "게임 디자이너", icon: "🕹️", button: "🎮 게임 만들기",
+          short: "상상 속 규칙과 캐릭터로 나만의 게임을 만들어요.",
+          description: "게임 디자이너는 어떤 놀이를 만들지 상상하고, 규칙과 캐릭터를 정해 사람들이 재미있게 즐길 수 있도록 만들어요.",
+          jobInfo: "게임 디자이너는 이야기 작가, 그림 작가, 개발자와 함께 일해요. AI에게 아이디어를 물어보고, 사람에게 재미있는지 직접 시험하며 고쳐요.",
+          prompt: "구름 위에서 별을 모으는 고양이",
+          hint: "누가 주인공인지, 무엇을 하면 재미있을지 적어보세요.",
+          output: (idea) => `🌟 게임 아이디어\n${idea}을(를) 주제로 해요.\n\n목표: 반짝이는 아이템을 모으고 장애물을 피해요!\n규칙: 아이템을 누르면 점수가 1점 올라가요.\n다음 단계: 주인공과 게임 배경을 그려 보세요.`,
+          visual: "🐱　☁️　⭐　☁️",
+          demo: "game"
+        },
+        video: {
+          title: "AI로 만드는 영상", job: "영상 감독", icon: "🎬", button: "🎥 영상 만들기",
+          short: "짧은 이야기와 장면을 이어서 영상으로 표현해요.",
+          description: "영상 감독은 어떤 이야기를 보여줄지 정하고, 장면·대사·음악을 골라 재미있고 알기 쉬운 영상으로 만들어요.",
+          jobInfo: "영상 감독은 촬영 감독, 배우, 편집자와 함께 일해요. AI와 장면 아이디어를 나누고, 영상의 순서를 직접 계획하고 다듬어요.",
+          prompt: "바닷속에서 보물을 찾는 아기 거북이",
+          hint: "주인공과 장소, 일어나는 일을 짧게 써보세요.",
+          output: (idea) => `🎞️ 나의 3장면 이야기\n\n장면 1 · 시작\n${idea}의 첫 장면! 넓은 풍경을 보여줘요.\n\n장면 2 · 모험\n주인공이 새로운 친구를 만나 함께 문제를 해결해요.\n\n장면 3 · 마무리\n모두 힘을 모아 멋진 결말을 만들어요!`,
+          visual: "🎬　🌊　🐢　✨",
+          demo: "video"
+        },
+        song: {
+          title: "AI로 만드는 노래", job: "작곡가", icon: "🎵", button: "🎹 노래 만들기",
+          short: "기분과 단어를 골라 나만의 노랫말을 지어요.",
+          description: "작곡가는 마음을 움직이는 멜로디와 가사를 만들어요. 신나는 노래, 조용한 노래처럼 느낌에 맞는 소리를 골라요.",
+          jobInfo: "작곡가는 가수와 연주자, 작사가와 함께 노래를 만들어요. AI가 떠올린 단어도 참고하고, 어떤 노래를 들려줄지 직접 결정해요.",
+          prompt: "친구와 함께 떠나는 신나는 우주 여행",
+          hint: "노래에 꼭 넣고 싶은 이야기나 단어를 적어보세요.",
+          output: (idea) => `🎶 ${idea}\n\n반짝반짝 별빛 따라\n두근두근 마음 모아\n손을 잡고 날아가자\n우리의 꿈을 찾아서!\n\n(후렴) 라라라, 신나는 오늘\n라라라, 함께 부르자!`,
+          visual: "🎤　🎼　🎹　🎶",
+          demo: "song"
+        },
+        art: {
+          title: "AI로 만드는 그림", job: "일러스트레이터", icon: "🎨", button: "🖌️ 그림 만들기",
+          short: "색과 모양으로 머릿속 이야기를 그림으로 그려요.",
+          description: "일러스트레이터는 책이나 게임에 들어갈 그림을 그려요. 색, 표정, 배경을 정해 머릿속 상상을 눈에 보이게 표현해요.",
+          jobInfo: "일러스트레이터는 작가, 디자이너와 함께 그림을 만들어요. AI에게 원하는 그림을 말로 설명해 보고, 마음에 드는 부분을 골라 발전시켜요.",
+          prompt: "보라색 우주복을 입고 달에서 춤추는 토끼",
+          hint: "무엇을 그릴지, 어떤 색과 분위기인지 적어보세요.",
+          output: (idea) => `🖼️ 그림 설명 카드\n\n“${idea}”\n\n색칠 아이디어: 보라색과 노란색을 함께 써봐요.\n배경 아이디어: 작은 별과 둥근 달을 더해봐요.\n\n이 설명을 보고 직접 그림을 그려도 좋아요!`,
+          visual: "🌙　🐰　🪐　⭐",
+          demo: "art"
+        }
+      };
+      const starterPosts = [
+        { id: "sample-game", category: "game", title: "별을 줍는 용용이", content: "구름 위를 뛰어다니며 별을 모으는 게임! 장애물은 무지개예요.", date: "오늘", sample: true },
+        { id: "sample-song", category: "song", title: "숲속 친구들 합창단", content: "다람쥐와 토끼가 함께 부르는 신나는 봄 노래를 만들었어요.", date: "오늘", sample: true },
+        { id: "sample-art", category: "art", title: "달나라 피크닉", content: "분홍 우주복을 입은 고양이가 달에서 샌드위치를 먹어요.", date: "오늘", sample: true }
+      ];
+      const app = document.getElementById("app");
+      const toast = document.getElementById("toast");
+      let activeField = null;
+      let currentPreview = null;
+      let activeFilter = "all";
+      const apiAvailable = new Set();
+
+      function getPosts() {
+        try {
+          const saved = JSON.parse(localStorage.getItem("aiContentsDesignerPosts") || "[]");
+          return Array.isArray(saved) ? [...saved, ...starterPosts] : starterPosts;
+        } catch (error) {
+          console.error("작품 게시물을 불러오지 못했습니다.", error);
+          return starterPosts;
+        }
+      }
+      function savePost(post) {
+        try {
+          const saved = JSON.parse(localStorage.getItem("aiContentsDesignerPosts") || "[]");
+          const posts = Array.isArray(saved) ? saved : [];
+          posts.unshift(post);
+          localStorage.setItem("aiContentsDesignerPosts", JSON.stringify(posts));
+          return true;
+        } catch (error) {
+          console.error("작품을 저장하지 못했습니다.", error);
+          showToast("저장할 수 없어요. 브라우저 저장 공간을 확인해 주세요.");
+          return false;
+        }
+      }
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+      }
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.setTimeout(() => toast.classList.remove("show"), 2300);
+      }
+      function renderHome(shouldScroll = false) {
+        activeField = null;
+        currentPreview = null;
+        app.innerHTML = `
+          <section class="hero" aria-labelledby="page-title">
+            <div>
+              <span class="eyebrow">✨ 오늘은 내가 AI 콘텐츠 디자이너!</span>
+              <h1 id="page-title">AI Contents<br>designer</h1>
+              <p class="hero-copy">AI와 함께 상상하고, 직접 만들어봐요!<br>어떤 콘텐츠 디자이너가 되어볼까요?</p>
+            </div>
+            <div class="hero-visual" aria-hidden="true">
+              <div class="bot-scene"><span class="bot-orbit"></span><span class="floaty one">✨</span><span class="floaty two">💡</span><span class="floaty three">⭐</span><div class="big-bot"><span class="antenna"></span><span class="cheek"></span><span class="cheek right"></span></div></div>
+            </div>
+          </section>
+          <section aria-labelledby="choose-title">
+            <div class="section-heading"><div><h2 id="choose-title">무엇을 만들어 볼까요?</h2><p>마음에 드는 카드를 눌러 시작해요!</p></div><span class="count-pill">4가지 창작 놀이터</span></div>
+            <div class="career-grid">
+              ${Object.entries(fields).map(([key, field]) => `<button class="career-card ${key}" data-field="${key}" type="button"><span class="card-icon" aria-hidden="true">${field.icon}</span><span class="card-title">${field.title}</span><span class="card-description">${field.short}</span><span class="card-arrow">만들기 →</span></button>`).join("")}
+            </div>
+          </section>
+          ${boardMarkup()}
+        `;
+        app.querySelectorAll("[data-field]").forEach((button) => button.addEventListener("click", () => renderStudio(button.dataset.field)));
+        wireBoard();
+        if (shouldScroll) document.getElementById("board")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      function boardMarkup() {
+        const posts = getPosts().filter((post) => activeFilter === "all" || post.category === activeFilter);
+        return `<section class="board-section" id="board" aria-labelledby="board-title">
+          <div class="section-heading board-heading">
+            <div><h2 id="board-title">📌 우리들의 작품 게시판</h2><p>게임, 영상, 노래, 그림 작품이 한곳에 모여요.</p></div>
+            <div class="board-tools" aria-label="작품 종류 필터">
+              <button class="filter-button ${activeFilter === "all" ? "active" : ""}" data-filter="all" type="button">전체</button>
+              ${Object.entries(fields).map(([key, field]) => `<button class="filter-button ${activeFilter === key ? "active" : ""}" data-filter="${key}" type="button">${field.icon}</button>`).join("")}
+            </div>
+          </div>
+          <div class="board-grid">${posts.length ? posts.map(postMarkup).join("") : '<div class="empty-board">아직 작품이 없어요. 첫 번째 작품을 만들어 게시해 볼까요? ✨</div>'}</div>
+        </section>`;
+      }
+      function postMarkup(post) {
+        const field = fields[post.category] || fields.art;
+        return `<article class="post-card" data-category="${escapeHtml(post.category)}">
+          <div class="post-top"><span class="post-category">${field.icon} ${field.title.replace("AI로 만드는 ", "")}</span><span class="post-date">${escapeHtml(post.date || "오늘")}</span></div>
+          <h3>${escapeHtml(post.title)}</h3><p>${escapeHtml(post.content)}</p>
+        </article>`;
+      }
+      function wireBoard() {
+        app.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => {
+          activeFilter = button.dataset.filter;
+          renderHome(true);
+        }));
+      }
+      function renderStudio(key) {
+        const field = fields[key];
+        if (!field) return;
+        activeField = key;
+        currentPreview = null;
+        app.innerHTML = `<section class="detail-page">
+          <div class="detail-toolbar"><button class="back-button" id="backButton" type="button">← 분야 선택으로</button><span class="count-pill">나의 창작 스튜디오</span></div>
+          <div class="detail-layout">
+            <aside class="info-panel">
+              <div class="field-badge" aria-hidden="true">${field.icon}</div>
+              <h2>${field.job}</h2>
+              <p>${field.description}</p>
+              <div class="job-box"><h3>👩‍🚀 어떤 일을 할까요?</h3><p>${field.jobInfo}</p></div>
+              <div class="sparkle-note">💡 AI는 아이디어를 도와주는 친구예요.<br>내가 생각하고 고르는 것이 가장 중요해요!</div>
+            </aside>
+            <section class="studio-panel" aria-labelledby="studio-title">
+              <h2 id="studio-title">${field.button}</h2>
+              <p class="intro">${key === "game" || key === "song" ? "내 아이디어를 적으면 Gemini가 작품 내용을 만들어줘요. 아이디어를 바탕으로 직접 고쳐도 좋아요!" : "멋진 작품의 제목과 아이디어를 적어주세요. 이 분야는 예시를 만드는 체험이에요."}</p>
+              ${key === "game" || key === "song" ? '<div class="api-status" id="apiStatus" role="status">Gemini 연결 상태를 확인하고 있어요<span class="loading-dots">…</span></div>' : ""}
+              <form id="createForm">
+                <div class="field"><label for="workTitle">작품 제목</label><input id="workTitle" maxlength="50" required placeholder="예: 반짝별 탐험대"></div>
+                <div class="field"><label for="ideaInput">내 아이디어</label><textarea id="ideaInput" maxlength="240" required>${escapeHtml(field.prompt)}</textarea><div class="prompt-hint">${field.hint} (최대 240자)</div></div>
+                <button class="primary-button" type="submit">${field.button}</button>
+              </form>
+              <div class="preview-box" id="previewBox" hidden></div>
+            </section>
+          </div>
+        </section>`;
+        document.getElementById("backButton").addEventListener("click", () => renderHome());
+        if (key === "game" || key === "song") checkApiStatus(key);
+        document.getElementById("createForm").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const title = document.getElementById("workTitle").value.trim();
+          const idea = document.getElementById("ideaInput").value.trim();
+          if (!title || !idea) return;
+          const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+          submitButton.disabled = true;
+          submitButton.textContent = "✨ 만들고 있어요…";
+          try {
+            if ((key === "game" || key === "song") && apiAvailable.has(key)) {
+              const result = await generateWithGemini(key, idea);
+              currentPreview = { key, title, idea, result, generated: true, content: formatGeneratedWork(key, result) };
+            } else {
+              currentPreview = { key, title, idea, generated: false, content: field.output(idea) };
+            }
+          } catch (error) {
+            showToast(error.message);
+            submitButton.disabled = false;
+            submitButton.textContent = field.button;
+            return;
+          }
+          renderPreview();
+        });
+      }
+      async function checkApiStatus(key) {
+        const status = document.getElementById("apiStatus");
+        try {
+          const response = await fetch("/api/status");
+          if (!response.ok) throw new Error("Gemini 서버에 연결할 수 없어요.");
+          const data = await response.json();
+          if (!data.configured) throw new Error("Gemini API 키가 아직 설정되지 않았어요.");
+          apiAvailable.add(key);
+          status.className = "api-status ready";
+          status.textContent = "✅ Gemini 2.5 Flash-Lite 연결 준비 완료 · 짧은 텍스트를 생성해요.";
+        } catch {
+          apiAvailable.delete(key);
+          status.className = "api-status";
+          if (location.protocol === "file:" || location.hostname.endsWith("github.io")) {
+            status.textContent = "ℹ️ 공개 HTML 체험 모드예요. 아래에서 예시 작품을 만들 수 있고, Gemini 실생성은 서버 연결 후 사용할 수 있어요.";
+            return;
+          }
+          status.className = "api-status error";
+          status.textContent = "⚠️ Gemini 서버에 연결할 수 없어요. 안내에 따라 start.ps1로 사이트를 실행해 주세요.";
+        }
+      }
+      async function generateWithGemini(category, idea) {
+        let response;
+        try {
+          response = await fetch("/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ category, idea })
+          });
+        } catch (error) {
+          throw new Error("Gemini 서버에 연결할 수 없어요. start.ps1로 사이트를 실행했는지 확인해 주세요.");
+        }
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "작품 생성에 실패했어요. 잠시 후 다시 시도해 주세요.");
+        return data.result;
+      }
+      function formatGeneratedWork(key, result) {
+        if (key === "game") {
+          return `🎮 ${result.title}\n${result.story}\n\n목표: ${result.goal}\n주인공: ${result.heroEmoji}　모을 것: ${result.collectibleEmoji}　조심할 것: ${result.obstacleEmoji}\n\n아래에서 직접 별을 모아 플레이해 보세요!`;
+        }
+        return `🎵 ${result.mood} 노래 · ${result.bpm} BPM\n\n${result.lyrics.join("\n")}\n\n(후렴)\n${result.chorus}\n\n아래 재생 버튼을 누르면 만든 멜로디를 들어볼 수 있어요.`;
+      }
+      function renderPreview() {
+        const field = fields[currentPreview.key];
+        const box = document.getElementById("previewBox");
+        box.hidden = false;
+        let demo = field.demo === "game" && currentPreview.result
+          ? `<div class="preview-visual" aria-label="게임 주인공과 아이템">${escapeHtml(currentPreview.result.heroEmoji)}　${escapeHtml(currentPreview.result.collectibleEmoji)}　${escapeHtml(currentPreview.result.obstacleEmoji)}</div>`
+          : `<div class="preview-visual" aria-label="작품 아이디어 미리보기">${field.visual}</div>`;
+        if (field.demo === "game") demo += `<div class="game-demo"><button id="collectStar" type="button">${currentPreview.result ? escapeHtml(currentPreview.result.collectibleEmoji) : "⭐"} 모으기!</button><span class="game-score" id="gameScore">${currentPreview.result ? `주인공 ${escapeHtml(currentPreview.result.heroEmoji)} · 목표 ${escapeHtml(currentPreview.result.goal)}` : "별을 모아봐!"}<br>모은 아이템 0개</span></div>`;
+        if (field.demo === "song") demo += `<div class="audio-demo"><span>🎼 ${currentPreview.result ? `${escapeHtml(currentPreview.result.mood)} 멜로디 · ${escapeHtml(currentPreview.result.bpm)} BPM` : "브라우저 음성으로 미리 듣기"}</span><button id="playSong" type="button">▶ 들어보기</button></div>`;
+        box.innerHTML = `<div class="preview-head"><strong>✨ ${escapeHtml(currentPreview.title)} 미리보기</strong><span class="demo-label">${currentPreview.generated ? "Gemini 생성" : "예시 체험"}</span></div>${demo}<div class="preview-output">${escapeHtml(currentPreview.content)}</div><div class="preview-actions"><button id="postWork" type="button">📌 게시판에 올리기</button><button id="editWork" type="button">✏️ 다시 만들기</button></div>`;
+        if (field.demo === "game") {
+          let score = 0;
+          document.getElementById("collectStar").addEventListener("click", () => {
+            score += 1;
+            const item = currentPreview.result?.collectibleEmoji || "⭐";
+            document.getElementById("gameScore").innerHTML = `모은 ${escapeHtml(item)} ${score}개${currentPreview.result ? `<br>주인공 ${escapeHtml(currentPreview.result.heroEmoji)} · 조심할 것 ${escapeHtml(currentPreview.result.obstacleEmoji)}` : ""}`;
+          });
+        }
+        if (field.demo === "song") {
+          document.getElementById("playSong").addEventListener("click", () => {
+            if (!currentPreview.result) {
+              if (!("speechSynthesis" in window)) return showToast("이 브라우저에서는 음성 미리 듣기를 사용할 수 없어요.");
+              window.speechSynthesis.cancel();
+              const utterance = new SpeechSynthesisUtterance(currentPreview.content);
+              utterance.lang = "ko-KR";
+              window.speechSynthesis.speak(utterance);
+              return;
+            }
+            playGeneratedMelody(currentPreview.result);
+          });
+        }
+        document.getElementById("postWork").addEventListener("click", () => {
+          const post = { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, category: currentPreview.key, title: currentPreview.title, content: currentPreview.content, date: new Date().toLocaleDateString("ko-KR") };
+          if (!savePost(post)) return;
+          activeFilter = "all";
+          renderHome(true);
+          showToast("작품을 게시판에 올렸어요! 멋져요 🎉");
+        });
+        document.getElementById("editWork").addEventListener("click", () => {
+          const submitButton = document.querySelector('#createForm button[type="submit"]');
+          submitButton.disabled = false;
+          submitButton.textContent = field.button;
+          document.getElementById("workTitle").focus();
+          box.hidden = true;
+          currentPreview = null;
+        });
+        box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      function playGeneratedMelody(song) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return showToast("이 브라우저에서는 멜로디 재생을 지원하지 않아요.");
+        const button = document.getElementById("playSong");
+        const context = new AudioContextClass();
+        const notes = Array.isArray(song.notes) ? song.notes.slice(0, 16) : [];
+        if (!notes.length) {
+          context.close();
+          return showToast("만든 멜로디를 찾지 못했어요. 다시 생성해 주세요.");
+        }
+        const beat = 60 / Math.max(60, Math.min(160, Number(song.bpm) || 100));
+        button.disabled = true;
+        button.textContent = "♪ 재생 중";
+        context.resume().then(() => {
+          notes.forEach((note, index) => {
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            const midi = Math.max(60, Math.min(84, Number(note) || 60));
+            oscillator.type = "sine";
+            oscillator.frequency.value = 440 * Math.pow(2, (midi - 69) / 12);
+            gain.gain.setValueAtTime(0.0001, context.currentTime + index * beat);
+            gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + index * beat + 0.025);
+            gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + index * beat + beat * 0.75);
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start(context.currentTime + index * beat);
+            oscillator.stop(context.currentTime + index * beat + beat * 0.8);
+          });
+          window.setTimeout(() => {
+            button.disabled = false;
+            button.textContent = "▶ 다시 듣기";
+            context.close();
+          }, notes.length * beat * 1000 + 150);
+        }).catch((error) => {
+          context.close();
+          button.disabled = false;
+          button.textContent = "▶ 들어보기";
+          console.error("멜로디 재생에 실패했습니다.", error);
+          showToast("멜로디 재생을 시작할 수 없어요.");
+        });
+      }
+      document.getElementById("homeButton").addEventListener("click", () => {
+        activeFilter = "all";
+        renderHome();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      document.getElementById("boardButton").addEventListener("click", () => {
+        if (!activeField) document.getElementById("board")?.scrollIntoView({ behavior: "smooth" });
+        else {
+          renderHome(true);
+        }
+      });
+      renderHome();
+    })();
+  </script>
+</body>
+</html>
