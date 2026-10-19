@@ -179,7 +179,7 @@
   <main class="shell" id="app"></main>
   <footer class="shell">
     <strong>AI Contents designer</strong> · 아이디어는 내가, 멋진 상상은 함께!<br>
-    게임·노래 아이디어는 Gemini Flash-Lite로 만들고, 게시물은 이 기기의 브라우저에 저장돼요. 영상·그림 제작은 체험용 예시입니다.
+    공개 페이지에서는 예시 체험을 사용할 수 있어요. Gemini 실생성에는 별도 서버 연결이 필요하며, 영상·그림은 체험용 예시입니다.
   </footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
@@ -341,7 +341,7 @@
             </aside>
             <section class="studio-panel" aria-labelledby="studio-title">
               <h2 id="studio-title">${field.button}</h2>
-              <p class="intro">${key === "game" || key === "song" ? "내 아이디어를 적으면 Gemini가 작품 내용을 만들어줘요. 아이디어를 바탕으로 직접 고쳐도 좋아요!" : "멋진 작품의 제목과 아이디어를 적어주세요. 이 분야는 예시를 만드는 체험이에요."}</p>
+              <p class="intro">${key === "game" || key === "song" ? (location.hostname.endsWith("github.io") || location.protocol === "file:" ? "공개 HTML 데모에서는 내 아이디어로 예시 작품을 만들어요. Gemini 실생성은 서버 연결 후 사용할 수 있어요." : "내 아이디어를 적으면 Gemini가 작품 내용을 만들어줘요. 아이디어를 바탕으로 직접 고쳐도 좋아요!") : "멋진 작품의 제목과 아이디어를 적어주세요. 이 분야는 예시를 만드는 체험이에요."}</p>
               ${key === "game" || key === "song" ? '<div class="api-status" id="apiStatus" role="status">Gemini 연결 상태를 확인하고 있어요<span class="loading-dots">…</span></div>' : ""}
               <form id="createForm">
                 <div class="field"><label for="workTitle">작품 제목</label><input id="workTitle" maxlength="50" required placeholder="예: 반짝별 탐험대"></div>
