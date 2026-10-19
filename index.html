@@ -45,6 +45,9 @@ main{padding:24px 0 80px}
 .bubble{position:absolute;right:2.5%;bottom:5%;display:flex;align-items:flex-end;gap:6px}
 .bubble img{width:clamp(70px,9vw,118px);animation:bob 3s ease-in-out infinite}
 .bubble span{background:#fff;border-radius:20px 20px 4px 20px;padding:10px 14px;font-family:'Jua';font-size:clamp(13px,1.4vw,17px);box-shadow:0 4px 0 #dcd3ff;margin-bottom:70px;white-space:nowrap}
+.intro .sec-title{margin:34px 0 16px}
+.player{background:#fff;border-radius:36px;padding:12px;box-shadow:0 12px 0 #f3d9a4;max-width:960px;margin:auto}
+.player video{display:block;width:100%;aspect-ratio:16/9;border-radius:26px;background:#fdf3e2}
 .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:30px 0 8px}
 .flow div{background:#fff;border-radius:26px;padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 7px 0 #e6e1f7}
 .flow i{font-style:normal;flex:none;width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:30px}
@@ -332,6 +335,9 @@ function home(){
       <h1>오늘은 어떤<br><em>AI 크리에이터</em>가<br>되어 볼까?</h1>${steps(1)}
       <button class="btn yellow" id="start">🚀 분야 고르러 가기</button></div>
     <div class="bubble"><span>나랑 같이 만들어 보자!</span><img src="images/mascot.svg" alt="마스코트 코코"></div></section>
+    <section class="intro"><h2 class="sec-title">🎬 AI 친구 별봇이 들려주는 이야기 <small>먼저 영상을 보고 시작해요!</small></h2>
+      <div class="player"><video controls playsinline preload="metadata" poster="images/intro-poster.jpg">
+        <source src="images/intro.mp4" type="video/mp4">영상을 재생할 수 없는 브라우저예요.</video></div></section>
     <section class="flow">
       <div><i style="background:#fff1d1">💡</i><span><b>① 내가 생각해요</b><small>재미있는 아이디어 떠올리기</small></span></div>
       <div><i style="background:#ede5ff">🤖</i><span><b>② AI가 만들어요</b><small>주문서로 AI에게 부탁하기</small></span></div>
