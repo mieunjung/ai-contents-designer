@@ -32,13 +32,13 @@ GitHub Pages는 HTML만 실행하므로 모델 호출은 Supabase Edge Function 
 
 4. PowerShell에서 이 폴더로 이동해 `.\deploy-supabase.ps1`을 실행합니다. 프로젝트 reference는 기본값으로 현재 프로젝트를 사용합니다. 저장소 밖에서 실행해도 스크립트가 저장소의 파일을 찾으며, SQL 마이그레이션을 적용하고 `ai-generate`, `board-upload` Edge Function을 JWT 검증 없이 배포합니다. 함수가 공개 API 키를 확인하고 데이터베이스의 사용량 제한을 적용합니다.
 5. Google AI Studio에서 새 Gemini 키를 발급하고, 스크립트의 숨김 입력란에 입력합니다. 키는 Supabase secret `GEMINI_API_KEY`로 설정되며 임시 파일은 작업 후 삭제됩니다. Gemini 키는 채팅·HTML·저장소에 넣지 마세요.
-6. 스크립트가 Supabase의 공개 URL과 publishable 키를 GitHub Actions 변수로 등록해 Pages 배포를 시작합니다. 배포 후 [공개 사이트](https://mieunjung.github.io/ai-contents-designer/)의 네 가지 만들기 화면에 Gemini 연결 완료가 표시됩니다.
+6. 스크립트가 Supabase의 공개 URL과 publishable 키를 GitHub Actions 저장소 변수 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`로 등록해 Pages 배포를 시작합니다. 이 두 변수가 없으면 Pages workflow는 연결이 끊긴 사이트를 게시하지 않고 실패합니다. 배포 후 [공개 사이트](https://mieunjung.github.io/ai-contents-designer/)의 네 가지 만들기 화면에 Gemini 연결 완료가 표시됩니다.
 
 Supabase의 무료 사용량과 Gemini 무료 티어는 계정, 지역, 현재 제공 정책에 따라 달라질 수 있으며 무제한 보장이 아닙니다. 이 함수는 IP 해시 기준 하루 8회, 전체 합계 하루 100회의 생성 한도를 둡니다. SQL 마이그레이션을 적용하지 않으면 생성을 fail-closed로 거부합니다. 실제 노래 음원이나 가수 목소리를 생성하지 않고, 새 가사와 16음의 짧은 브라우저 합성 멜로디를 만듭니다.
 
 ## 스크래치 게임 게시판 업로드
 
-작품 게시판의 업로드 양식에서 작품 제목, 소개, `.sb3` 파일을 제출하면 공개 Supabase Storage 버킷과 데이터베이스에 저장됩니다. 업로드한 게임은 모든 방문자가 게시판에서 확인하고 다운로드할 수 있습니다. 파일은 최대 50MB이며, IP 해시 기준 하루 10회, 전체 하루 200회 업로드로 제한됩니다. 업로드는 Supabase Edge Function이 서명한 URL을 사용하며, 파일을 브라우저 로컬 저장소에 보관하지 않습니다. GitHub Pages와 Supabase 백엔드를 설정한 뒤 새 마이그레이션 및 함수를 배포해야 사용할 수 있습니다.
+작품 게시판에서 **작품 올리기**를 누르고 분야를 **AI 게임**으로 선택한 뒤 제목, 소개, `.sb3` 파일을 제출하면 공개 Supabase Storage 버킷과 데이터베이스에 저장됩니다. 올린 게임은 AI 게임 게시판의 카드에서 열어 작품 소개를 확인하고 `.sb3` 파일을 다운로드할 수 있습니다. 파일은 최대 50MB이며, IP 해시 기준 하루 10회, 전체 하루 200회 업로드로 제한됩니다. 업로드는 Supabase Edge Function이 서명한 URL을 사용하며, 파일을 브라우저 로컬 저장소에 보관하지 않습니다. 게시판에는 백엔드 연결 상태와 공개 게임 개수가 표시됩니다. GitHub Pages와 Supabase 백엔드를 설정한 뒤 새 마이그레이션 및 함수를 배포해야 사용할 수 있습니다.
 
 ## 생성되는 콘텐츠
 

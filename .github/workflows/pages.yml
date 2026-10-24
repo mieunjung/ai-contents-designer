@@ -30,6 +30,10 @@ jobs:
           mkdir _site
           cp index.html _site/index.html
           if [ -d images ]; then cp -r images _site/images; fi
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Set the SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY repository Actions variables before deploying."
+            exit 1
+          fi
           SUPABASE_URL="$SUPABASE_URL" SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" node -e "const fs=require('node:fs');fs.writeFileSync('_site/supabase-config.js','window.AI_CONTENTS_CONFIG = '+JSON.stringify({url:process.env.SUPABASE_URL||'',publishableKey:process.env.SUPABASE_PUBLISHABLE_KEY||''})+';\\n')"
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}

@@ -111,16 +111,18 @@ textarea,input,select{width:100%;border:3px solid #eceef8;border-radius:18px;pad
 .board-head h1{margin:0 0 6px;font-size:clamp(30px,4.5vw,50px)}.board-head p{margin:0;font-size:18px;color:var(--muted)}
 .board-head .btn{width:auto;margin:0;padding:14px 26px}
 .filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:24px}
-.scratch-upload{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px;padding:18px;background:#fff;border:3px solid #d7f0e2;border-radius:24px;box-shadow:0 7px 0 #dfe3f3}
-.scratch-upload h2{grid-column:1/-1;margin:0;font-size:23px;color:#258252}
-.scratch-upload p{grid-column:1/-1;margin:0;color:var(--muted);font-size:14px;line-height:1.6}
-.scratch-upload label{display:block;margin-bottom:6px;font-family:'Jua';font-size:16px}
-.scratch-upload input,.scratch-upload textarea{margin:0;background:#fff;border-width:2px}
-.scratch-upload .file-field,.scratch-upload button{grid-column:1/-1}
-.scratch-upload button{border:0;border-radius:16px;padding:13px 18px;background:#2fbf71;color:#fff;font-family:'Jua';font-size:19px;box-shadow:0 5px 0 #1f9555;cursor:pointer}
-.scratch-upload button:disabled{opacity:.65;cursor:wait}
-.board-status{grid-column:1/-1;margin:0;color:var(--muted);font-size:13px;line-height:1.5}
-.post-download{display:inline-block;margin-top:12px;padding:9px 14px;border-radius:999px;background:#ddf7e8;color:#1f7c4d;font-family:'Jua';font-size:16px}
+.board-status{margin:-8px 2px 16px;color:var(--muted);font-size:13px;line-height:1.5}
+.post-open{width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.post-open:focus-visible{outline:3px solid rgba(128,99,232,.45);outline-offset:4px;border-radius:8px}
+.post-open h3{margin:10px 0 4px;font-family:'Jua';font-size:22px}
+.post-detail{max-width:900px;margin:20px auto;padding:clamp(22px,5vw,42px);border:5px solid #fff;border-radius:32px;background:#fff;box-shadow:0 10px 0 #dfe3f3}
+.post-detail .noimg{height:220px;border-radius:24px;font-size:100px}
+.post-detail h1{margin:18px 0 8px;font-size:clamp(30px,5vw,48px)}
+.post-detail p{white-space:pre-wrap;line-height:1.8;color:var(--muted)}
+.post-detail-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.post-detail-actions .btn{width:auto;flex:1;min-width:180px}
+.post-download{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:12px 18px;border-radius:16px;background:#2fbf71;color:#fff;font-family:'Jua';font-size:19px;box-shadow:0 5px 0 #1f9555}
+.file-hint{margin:4px 0 12px;color:var(--muted);font-size:12px;line-height:1.5}
 .posts{columns:3 280px;column-gap:22px}
 .post{break-inside:avoid;background:#fff;border-radius:26px;overflow:hidden;margin-bottom:22px;box-shadow:0 8px 0 #dfe3f3}
 .post>img{width:100%;display:block}.noimg{height:150px;display:grid;place-items:center;font-size:70px;background:var(--soft)}
@@ -137,13 +139,14 @@ details{margin-top:10px;font-size:14px;color:var(--muted)}summary{cursor:pointer
 .sheet{background:#fff;border-radius:32px;padding:28px;width:min(520px,100%);max-height:92vh;overflow:auto}.sheet h2{margin:0 0 16px;font-size:28px}
 .drop{display:block;border:3px dashed #cfd3ea;border-radius:20px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);margin-bottom:12px;font-size:17px}
 .drop img{max-width:100%;border-radius:14px}
+.drop input[type="file"]{max-width:100%;margin-top:10px}
 .row2{display:grid;grid-template-columns:1fr 2fr;gap:10px}
 #toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,120px);background:#2b2d42;color:#fff;padding:14px 24px;border-radius:999px;font-family:'Jua';font-size:18px;transition:.3s;z-index:60}
 #toast.show{transform:translate(-50%,0)}
 footer{text-align:center;color:var(--muted);padding:20px 0 40px;font-size:14px}
 @media(max-width:1000px){.flow{grid-template-columns:1fr}.mosaic{height:240px}.jobs{grid-template-columns:repeat(2,1fr)}.lab{grid-template-columns:1fr}.sticky{position:static}}
 @media(max-width:760px){.hero{aspect-ratio:auto;max-height:none;display:flex;flex-direction:column}.hero>img.bg{position:static;aspect-ratio:1376/768;height:auto}.hero-txt{position:static;transform:none;width:auto;padding:20px 20px 24px;text-align:center}.hero .steps{justify-content:center}.bubble{display:none}}
-@media(max-width:700px){.pick,.jobs{grid-template-columns:1fr}.band{grid-template-columns:1fr;text-align:center}.band .art{width:180px;margin:auto}.faces{justify-content:center}.big h2{font-size:30px}.logo span{display:none}nav .nav-btn{padding:10px 13px;font-size:15px}.scratch-upload{grid-template-columns:1fr}}
+@media(max-width:700px){.pick,.jobs{grid-template-columns:1fr}.band{grid-template-columns:1fr;text-align:center}.band .art{width:180px;margin:auto}.faces{justify-content:center}.big h2{font-size:30px}.logo span{display:none}nav .nav-btn{padding:10px 13px;font-size:15px}}
 </style>
 </head>
 <body>
@@ -157,11 +160,12 @@ footer{text-align:center;color:var(--muted);padding:20px 0 40px;font-size:14px}
 
 <div class="modal" id="modal"><form class="sheet" id="form">
   <h2>🖼️ 내 작품 올리기</h2>
-  <label class="drop"><input type="file" id="file" accept="image/*" hidden><span id="dropTxt"></span></label>
+  <label class="drop"><span id="dropTxt">📷 이미지 작품 또는 AI 게임의 Scratch .sb3 파일을 선택해요</span><input type="file" id="file" accept="image/*"></label>
+  <p class="file-hint" id="fileHint">AI 게임을 선택하면 .sb3 파일 업로드가 활성화됩니다. 스크래치 파일은 최대 50MB예요.</p>
   <select id="fCat"></select>
   <input id="fName" placeholder="이름 또는 별명 (예: 3반 별빛)" maxlength="20" required>
-  <input id="fTitle" placeholder="작품 제목" maxlength="30" required>
-  <textarea id="fDesc" rows="3" placeholder="작품 소개 한마디" maxlength="200"></textarea>
+  <input id="fTitle" placeholder="작품 제목" maxlength="50" required>
+  <textarea id="fDesc" rows="3" placeholder="작품 소개 한마디" maxlength="500"></textarea>
   <div class="row2"><button type="button" class="btn ghost" id="cancel">취소</button><button class="btn yellow">올리기 🎉</button></div>
 </form></div>
 <div id="toast"></div>
@@ -342,7 +346,7 @@ async function boardRequest(body){
 }
 async function refreshPublicScratchPosts(){
   if (!supabaseUrl || !supabasePublishableKey) {
-    publicBoardStatus = '공개 게시판 백엔드 설정이 필요합니다. 관리자에게 문의해 주세요.';
+    publicBoardStatus = '⚠️ 백엔드 연결 안 됨 · 공개 게임 목록과 업로드를 사용할 수 없습니다.';
     publicScratchPosts = [];
   } else {
     try {
@@ -357,22 +361,17 @@ async function refreshPublicScratchPosts(){
           id:`scratch-${p.id}`, k:'game', j:'AI 게임 게시판', name:'스크래치 게임', title:p.title, desc:p.content,
           date:p.created_at ? new Date(p.created_at).toLocaleDateString('ko-KR') : '오늘', likes:0, filePath:p.file_path
         }));
-      publicBoardStatus = '스크래치 게임 파일은 모든 방문자에게 공개됩니다. .sb3 파일 최대 50MB · IP 기준 하루 10회 업로드';
+      publicBoardStatus = `✅ 백엔드 연결됨 · 스크래치 게임 ${publicScratchPosts.length}개 · 공개 다운로드 가능`;
     } catch (error) {
       console.error('공개 스크래치 작품을 불러오지 못했습니다.', error);
       publicBoardStatus = `공개 게시판 연결 오류: ${error.message}`;
     }
   }
   const status = $('#boardStatus');
-  const posts = $('#boardPosts');
   if (status) status.textContent = publicBoardStatus;
-  if (posts && location.hash.replace(/^#\/?/, '').split('/')[0] === 'board') board();
+  if (location.hash.replace(/^#\/?/, '').split('/')[0] === 'board') board();
 }
-async function uploadScratchProject(event){
-  event.preventDefault();
-  const form = event.currentTarget;
-  const title = $('#scratchTitle').value.trim(), content = $('#scratchContent').value.trim();
-  const file = $('#scratchFile').files[0], button = form.querySelector('button[type="submit"]');
+async function uploadScratchProject({title, content, file, button}){
   if (!supabaseUrl || !supabasePublishableKey) return toast('공개 게시판 백엔드가 설정되지 않았어요.');
   if (!file || !file.name.toLowerCase().endsWith('.sb3')) return toast('Scratch 프로젝트 파일(.sb3)을 선택해 주세요.');
   if (file.size < 4 || file.size > 50 * 1024 * 1024) return toast('파일은 4바이트 이상, 50MB 이하로 올려 주세요.');
@@ -397,16 +396,15 @@ async function uploadScratchProject(event){
       throw new Error(data.message || data.error || '파일 업로드에 실패했습니다.');
     }
     await boardRequest({action:'finalize', path:prepared.path, title, content});
-    form.reset();
+    filt = 'game';
     await refreshPublicScratchPosts();
-    filt = 'game'; board();
+    $('#modal').classList.remove('open');
+    location.hash = '#/board';
     toast('스크래치 게임을 AI 게임 게시판에 올렸어요! 🎉');
   } catch(error) {
     console.error('스크래치 게임 업로드에 실패했습니다.', error);
     toast(error.message || '작품을 올리지 못했습니다. 잠시 후 다시 시도해 주세요.');
-  } finally {
-    button.disabled = false; button.textContent = '🎮 스크래치 게임 올리기';
-  }
+  } finally { button.disabled = false; }
 }
 const art = (src, emo) => `<div class="art"><span class="emo">${emo}</span><img src="${src}" alt="" loading="lazy" onerror="this.remove()"></div>`;
 const steps = n => `<div class="steps">${['분야 고르기','직업 알아보기','AI 실습하기'].map((s,i)=>`<span class="step ${i+1===n?'now':i+1<n?'done':''}">${i+1<n?'✅':['①','②','③'][i]} ${s}</span>`).join('')}</div>`;
@@ -418,6 +416,7 @@ function render(){
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('on', (p[0]==='board') === (b.dataset.n==='board')));
   scrollTo(0, 0);
   if (p[0] === 'board') return board();
+  if (p[0] === 'post' && p[1]) return postDetail(decodeURIComponent(p[1]));
   if (p[0] === 'c' && C[p[1]]) return (p[2] !== undefined && C[p[1]].jobs[p[2]]) ? lab(p[1], +p[2]) : jobs(p[1]);
   home();
 }
@@ -527,32 +526,48 @@ function board(){
     <p>친구들이 AI와 함께 만든 작품을 구경하고 ❤️로 응원해 주세요!</p></div>
     <button class="btn yellow" id="up2">✏️ 작품 올리기</button></section>
     <div class="filters">${cats.map(([k,t]) => `<button class="chip ${filt===k?'sel':''}" data-f="${k}">${t} (${k==='all'?list.length:list.filter(p=>p.k===k).length})</button>`).join('')}</div>
-    <form class="scratch-upload" id="scratchUploadForm">
-      <h2>🎮 AI 게임 게시판에 Scratch 게임 올리기</h2>
-      <p>올린 작품과 .sb3 파일은 모두에게 공개되고 내려받을 수 있어요. 파일 크기는 최대 50MB, IP 기준 하루 10회까지예요.</p>
-      <div><label for="scratchTitle">작품 제목</label><input id="scratchTitle" maxlength="50" required placeholder="예: 별을 모으는 용용이"></div>
-      <div><label for="scratchContent">작품 소개</label><textarea id="scratchContent" rows="2" maxlength="500" required placeholder="게임의 재미있는 점을 소개해 주세요."></textarea></div>
-      <div class="file-field"><label for="scratchFile">Scratch 파일 (.sb3)</label><input id="scratchFile" type="file" accept=".sb3,application/x.scratch.sb3" required></div>
-      <button type="submit">🎮 스크래치 게임 올리기</button>
-      <span class="board-status" id="boardStatus">${esc(publicBoardStatus)}</span>
-    </form>
+    <p class="board-status" id="boardStatus">${esc(publicBoardStatus)}</p>
     <section class="posts" id="boardPosts">${shown.length ? shown.map(p => post(p, liked.includes(p.id))).join('') : `<div class="empty">아직 작품이 없어요 🥲<br>첫 번째 작품의 주인공이 되어 보세요!</div>`}</section>`;
-  $('#scratchUploadForm').addEventListener('submit', uploadScratchProject);
 }
 function post(p, isLiked){
   const c = C[p.k] || C.art;
-  const downloadUrl = p.filePath
-    ? `${supabaseUrl}/storage/v1/object/public/scratch-projects/${encodeURIComponent(p.filePath)}?download=${encodeURIComponent(`${p.title}.sb3`)}`
-    : '';
+  const detailLink = p.filePath
+    ? `<button class="post-open" type="button" data-post="${esc(String(p.id))}" aria-label="${esc(p.title)} 작품 자세히 보기"><h3>${esc(p.title)}</h3><span class="by">작품 자세히 보기 →</span></button>`
+    : `<h3>${esc(p.title)}</h3>`;
   return `<article class="post" style="${vars(c)}">${p.img ? `<img src="${p.img}" alt="${esc(p.title)}">` : `<div class="noimg">${c.emoji}</div>`}
-    <div class="pb"><span class="badge">${c.emoji} ${esc(p.j || c.name)}</span><h3>${esc(p.title)}</h3>
+    <div class="pb"><span class="badge">${c.emoji} ${esc(p.j || c.name)}</span>${detailLink}
     <div class="by">✏️ ${esc(p.name)} · ${esc(p.date)}</div>${p.desc ? `<p>${esc(p.desc)}</p>` : ''}
     ${p.prompt ? `<details><summary>🪄 사용한 주문서 보기</summary><pre>${esc(p.prompt)}</pre></details>` : ''}
-    ${downloadUrl ? `<a class="post-download" href="${esc(downloadUrl)}" target="_blank" rel="noopener noreferrer">⬇️ Scratch 파일 다운로드 (.sb3)</a>` : `<div class="row"><button class="like ${isLiked?'done':''}" data-like="${p.id}">❤️ ${p.likes}</button><button class="del" data-del="${p.id}">삭제</button></div>`}</div></article>`;
+    ${p.filePath ? '' : `<div class="row"><button class="like ${isLiked?'done':''}" data-like="${esc(String(p.id))}">❤️ ${p.likes}</button><button class="del" data-del="${esc(String(p.id))}">삭제</button></div>`}</div></article>`;
+}
+function postDetail(postId){
+  const post = [...publicScratchPosts, ...load()].find(p => String(p.id) === postId);
+  if (!post) {
+    app.innerHTML = `<section class="post-detail"><button class="nav-btn" id="backToBoard" type="button">← 작품 게시판</button><h1>작품을 찾을 수 없어요</h1><p>게시물이 삭제되었거나 주소가 올바르지 않습니다.</p></section>`;
+    $('#backToBoard').addEventListener('click', () => { location.hash = '#/board'; });
+    return;
+  }
+  const c = C[post.k] || C.art;
+  const downloadUrl = post.filePath
+    ? `${supabaseUrl}/storage/v1/object/public/scratch-projects/${encodeURIComponent(post.filePath)}?download=${encodeURIComponent(`${post.title}.sb3`)}`
+    : '';
+  app.innerHTML = `<article class="post-detail" style="${vars(c)}">
+    <button class="nav-btn" id="backToBoard" type="button">← 작품 게시판</button>
+    <div class="noimg">${c.emoji}</div>
+    <span class="badge">${c.emoji} ${esc(post.j || c.name)}</span>
+    <h1>${esc(post.title)}</h1>
+    <div class="by">✏️ ${esc(post.name)} · ${esc(post.date)}</div>
+    <p>${esc(post.desc || '작품 소개가 없습니다.')}</p>
+    ${downloadUrl ? `<a class="post-download" href="${esc(downloadUrl)}">⬇️ Scratch 프로젝트 다운로드 (.sb3)</a>` : ''}
+    <div class="post-detail-actions"><button class="btn ghost" id="backToBoardBottom" type="button">게시판으로 돌아가기</button></div>
+  </article>`;
+  $('#backToBoard').addEventListener('click', () => { location.hash = '#/board'; });
+  $('#backToBoardBottom').addEventListener('click', () => { location.hash = '#/board'; });
 }
 app.addEventListener('click', e => {
-  const t = e.target.closest('[data-f],[data-like],[data-del],#up2'); if (!t) return;
+  const t = e.target.closest('[data-f],[data-like],[data-del],[data-post],#up2'); if (!t) return;
   if (t.dataset.f) { filt = t.dataset.f; return board(); }
+  if (t.dataset.post) { location.hash = `#/post/${encodeURIComponent(t.dataset.post)}`; return; }
   if (t.id === 'up2') return openUpload(filt === 'all' ? 'video' : filt, null, '');
   const list = load();
   if (t.dataset.like) {
@@ -567,15 +582,37 @@ app.addEventListener('click', e => {
 });
 
 let draft = {}, img = '';
+let gameFile = null;
 $('#fCat').innerHTML = Object.entries(C).map(([k,c]) => `<option value="${k}">${c.emoji} ${c.name}</option>`).join('');
 function openUpload(k, i, prompt){
-  draft = {k, i, prompt}; img = ''; $('#form').reset(); $('#fCat').value = k;
-  $('#dropTxt').innerHTML = '📷 여기를 눌러 작품 이미지를 골라요';
+  draft = {k, i, prompt}; img = ''; gameFile = null; $('#form').reset(); $('#fCat').value = k;
+  updateUploadFileType();
+  $('#dropTxt').textContent = k === 'game' ? '🎮 Scratch .sb3 파일을 선택해요' : '📷 작품 이미지를 선택해요';
   $('#modal').classList.add('open');
 }
+function updateUploadFileType(){
+  const isGame = $('#fCat').value === 'game';
+  $('#file').accept = isGame ? '.sb3,application/x.scratch.sb3' : 'image/*';
+  $('#file').required = isGame;
+  $('#fDesc').required = isGame;
+  $('#fileHint').textContent = isGame
+    ? 'Scratch 프로젝트(.sb3) 파일만 가능하며 최대 50MB예요. 올린 파일은 AI 게임 게시판에서 모두가 볼 수 있어요.'
+    : '이미지 파일을 선택해 작품 게시판에 올릴 수 있어요.';
+  $('#dropTxt').textContent = isGame ? '🎮 Scratch .sb3 파일을 선택해요' : '📷 작품 이미지를 선택해요';
+}
+$('#fCat').addEventListener('change', () => {
+  img = ''; gameFile = null; $('#file').value = '';
+  updateUploadFileType();
+});
 $('#cancel').onclick = () => $('#modal').classList.remove('open');
 $('#file').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
+  if ($('#fCat').value === 'game') {
+    if (!f.name.toLowerCase().endsWith('.sb3')) { e.target.value = ''; return toast('Scratch 프로젝트 파일(.sb3)을 선택해 주세요.'); }
+    gameFile = f;
+    $('#dropTxt').textContent = `🎮 선택한 게임 파일: ${f.name}`;
+    return;
+  }
   const r = new FileReader();
   r.onload = () => { const im = new Image(); im.onload = () => {
     const s = Math.min(1, 900 / Math.max(im.width, im.height)), cv = document.createElement('canvas');
@@ -584,9 +621,21 @@ $('#file').onchange = e => {
   }; im.src = r.result; };
   r.readAsDataURL(f);
 };
-$('#form').onsubmit = e => {
+$('#form').onsubmit = async e => {
   e.preventDefault();
   const k = $('#fCat').value, list = load();
+  if (k === 'game') {
+    const title = $('#fTitle').value.trim(), content = $('#fDesc').value.trim();
+    if (!gameFile) return toast('Scratch .sb3 파일을 선택해 주세요.');
+    const button = $('#form').querySelector('button[type="submit"]');
+    button.disabled = true; button.textContent = '⏳ 스크래치 파일을 올리고 있어요…';
+    try {
+      await uploadScratchProject({title, content, file:gameFile, button});
+    } finally {
+      button.disabled = false; button.textContent = '올리기 🎉';
+    }
+    return;
+  }
   const j = (draft.i !== null && draft.k === k) ? C[k].jobs[draft.i].n : C[k].name;
   list.unshift({id: Date.now(), k, j, name: $('#fName').value.trim(), title: $('#fTitle').value.trim(), desc: $('#fDesc').value.trim(),
     prompt: draft.prompt || '', img, date: new Date().toLocaleDateString('ko-KR'), likes: 0});
