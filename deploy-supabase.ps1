@@ -63,6 +63,7 @@ try {
   }
 
   Invoke-SupabaseCli functions deploy ai-generate --project-ref $projectRef --use-api --no-verify-jwt
+  Invoke-SupabaseCli functions deploy board-upload --project-ref $projectRef --use-api --no-verify-jwt
   [IO.File]::WriteAllText($temporaryEnv, "GEMINI_API_KEY=$plainKey", [Text.UTF8Encoding]::new($false))
   Invoke-SupabaseCli secrets set --project-ref $projectRef --env-file $temporaryEnv
 } finally {
@@ -89,6 +90,6 @@ Invoke-GitHubCli variable set SUPABASE_PUBLISHABLE_KEY --repo $repo --body $publ
 Invoke-GitHubCli workflow run "Deploy AI Contents designer" --repo $repo
 
 Write-Host ""
-Write-Host "Gemini backend is responding. GitHub Pages deployment has started."
+Write-Host "Supabase functions are responding. GitHub Pages deployment has started."
 Write-Host "Site: $siteUrl"
 Write-Host "The Supabase URL and publishable key are public app configuration; the Gemini key stays on Supabase."

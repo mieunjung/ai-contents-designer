@@ -2,3 +2,6 @@ project_id = "ai-contents-designer"
 
 [functions.ai-generate]
 verify_jwt = false
+
+[functions.board-upload]
+verify_jwt = false
