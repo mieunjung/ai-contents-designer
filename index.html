@@ -112,23 +112,30 @@ textarea,input,select{width:100%;border:3px solid #eceef8;border-radius:18px;pad
 .board-head .btn{width:auto;margin:0;padding:14px 26px}
 .filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:24px}
 .board-status{margin:-8px 2px 16px;color:var(--muted);font-size:13px;line-height:1.5}
-.post-open{width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
-.post-open:focus-visible{outline:3px solid rgba(128,99,232,.45);outline-offset:4px;border-radius:8px}
-.post-open h3{margin:10px 0 4px;font-family:'Jua';font-size:22px}
+.board-table-wrap{overflow-x:auto;border:4px solid #fff;border-radius:24px;background:#fff;box-shadow:0 8px 0 #dfe3f3}
+.board-table{width:100%;min-width:660px;border-collapse:collapse;text-align:left}
+.board-table th,.board-table td{padding:15px 18px;border-bottom:2px solid #f0f1f8}
+.board-table th{background:#f7f5ff;color:var(--deep);font-family:'Jua';font-size:17px;white-space:nowrap}
+.board-table td:first-child,.board-table th:first-child{width:76px;text-align:center;color:var(--muted)}
+.board-table tbody tr:last-child td{border-bottom:0}
+.board-table tbody tr:hover{background:#fbfaff}
+.board-title{padding:0;border:0;background:none;color:var(--deep);font:inherit;font-family:'Jua';font-size:18px;text-align:left;cursor:pointer}
+.board-title:hover{text-decoration:underline}
+.board-category{display:inline-block;padding:5px 11px;border-radius:999px;background:var(--soft);color:var(--deep);white-space:nowrap}
+.board-attachment{display:block;margin-top:4px;color:var(--muted);font-size:12px}
 .post-detail{max-width:900px;margin:20px auto;padding:clamp(22px,5vw,42px);border:5px solid #fff;border-radius:32px;background:#fff;box-shadow:0 10px 0 #dfe3f3}
 .post-detail .noimg{height:220px;border-radius:24px;font-size:100px}
+.detail-image{display:block;max-width:100%;max-height:460px;margin:18px auto;border-radius:22px;object-fit:contain}
 .post-detail h1{margin:18px 0 8px;font-size:clamp(30px,5vw,48px)}
 .post-detail p{white-space:pre-wrap;line-height:1.8;color:var(--muted)}
 .post-detail-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
 .post-detail-actions .btn{width:auto;flex:1;min-width:180px}
 .post-download{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:12px 18px;border-radius:16px;background:#2fbf71;color:#fff;font-family:'Jua';font-size:19px;box-shadow:0 5px 0 #1f9555}
+.post-file-name{margin-top:10px;color:var(--muted);font-size:14px;word-break:break-all}
 .file-hint{margin:4px 0 12px;color:var(--muted);font-size:12px;line-height:1.5}
-.posts{columns:3 280px;column-gap:22px}
-.post{break-inside:avoid;background:#fff;border-radius:26px;overflow:hidden;margin-bottom:22px;box-shadow:0 8px 0 #dfe3f3}
-.post>img{width:100%;display:block}.noimg{height:150px;display:grid;place-items:center;font-size:70px;background:var(--soft)}
-.pb{padding:16px 18px 18px}
+.noimg{height:150px;display:grid;place-items:center;font-size:70px;background:var(--soft)}
 .badge{display:inline-block;padding:5px 13px;border-radius:999px;font-size:14px;background:var(--soft);color:var(--deep)}
-.post h3{margin:10px 0 4px;font-size:22px}.by{color:var(--muted);font-size:14px}.post p{line-height:1.6;margin:10px 0 0}
+.by{color:var(--muted);font-size:14px}.post-detail p{line-height:1.7}
 details{margin-top:10px;font-size:14px;color:var(--muted)}summary{cursor:pointer}pre{white-space:pre-wrap;font-family:inherit;background:#f5f6fb;padding:10px;border-radius:12px}
 .row{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
 .like{border:0;background:#fff0f3;color:#ff4d7a;border-radius:999px;padding:8px 16px;font-size:17px;cursor:pointer}.like.done{background:#ff4d7a;color:#fff}
@@ -160,13 +167,13 @@ footer{text-align:center;color:var(--muted);padding:20px 0 40px;font-size:14px}
 
 <div class="modal" id="modal"><form class="sheet" id="form">
   <h2>🖼️ 내 작품 올리기</h2>
-  <label class="drop"><span id="dropTxt">📷 이미지 작품 또는 AI 게임의 Scratch .sb3 파일을 선택해요</span><input type="file" id="file" accept="image/*"></label>
-  <p class="file-hint" id="fileHint">AI 게임을 선택하면 .sb3 파일 업로드가 활성화됩니다. 스크래치 파일은 최대 50MB예요.</p>
+  <label class="drop"><span id="dropTxt">📎 작품에 첨부할 파일을 선택해요</span><input type="file" id="file"></label>
+  <p class="file-hint" id="fileHint">모든 파일 형식을 첨부할 수 있어요. 파일은 최대 50MB이며 게시판에서 다운로드할 수 있습니다.</p>
   <select id="fCat"></select>
   <input id="fName" placeholder="이름 또는 별명 (예: 3반 별빛)" maxlength="20" required>
   <input id="fTitle" placeholder="작품 제목" maxlength="50" required>
   <textarea id="fDesc" rows="3" placeholder="작품 소개 한마디" maxlength="500"></textarea>
-  <div class="row2"><button type="button" class="btn ghost" id="cancel">취소</button><button class="btn yellow">올리기 🎉</button></div>
+  <div class="row2"><button type="button" class="btn ghost" id="cancel">취소</button><button type="submit" class="btn yellow">올리기 🎉</button></div>
 </form></div>
 <div id="toast"></div>
 
@@ -333,7 +340,7 @@ const vars = c => `--main:${c.main};--soft:${c.soft};--deep:${c.deep}`;
 const supabaseConfig = window.AI_CONTENTS_CONFIG || {};
 const supabaseUrl = typeof supabaseConfig.url === 'string' ? supabaseConfig.url.replace(/\/+$/, '') : '';
 const supabasePublishableKey = typeof supabaseConfig.publishableKey === 'string' ? supabaseConfig.publishableKey : '';
-let publicScratchPosts = [], publicBoardStatus = '공개 스크래치 작품을 불러오는 중입니다…';
+let publicPosts = [], publicBoardStatus = '공개 작품을 불러오는 중입니다…';
 async function boardRequest(body){
   const response = await fetch(`${supabaseUrl}/functions/v1/board-upload`, {
     method:'POST',
@@ -344,26 +351,27 @@ async function boardRequest(body){
   if (!response.ok) throw new Error(data.error || '게시판 요청에 실패했습니다.');
   return data;
 }
-async function refreshPublicScratchPosts(){
+async function refreshPublicBoardPosts(){
   if (!supabaseUrl || !supabasePublishableKey) {
-    publicBoardStatus = '⚠️ 백엔드 연결 안 됨 · 공개 게임 목록과 업로드를 사용할 수 없습니다.';
-    publicScratchPosts = [];
+    publicBoardStatus = '⚠️ 백엔드 연결 안 됨 · 공개 첨부 게시물 목록과 업로드를 사용할 수 없습니다.';
+    publicPosts = [];
   } else {
     try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/board_posts?select=id,title,content,created_at,file_path&order=created_at.desc&limit=100`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/board_posts?select=id,category,title,content,uploader,file_name,created_at,file_path&order=created_at.desc&limit=100`, {
         headers:{apikey:supabasePublishableKey, Authorization:`Bearer ${supabasePublishableKey}`}
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !Array.isArray(data)) throw new Error(data.message || '공개 작품 목록을 불러오지 못했습니다.');
-      publicScratchPosts = data
-        .filter(p => p && typeof p.id === 'string' && typeof p.title === 'string' && typeof p.content === 'string' && typeof p.file_path === 'string')
+      publicPosts = data
+        .filter(p => p && typeof p.id === 'string' && categories.includes(p.category) && typeof p.title === 'string' && typeof p.content === 'string' && typeof p.file_path === 'string')
         .map(p => ({
-          id:`scratch-${p.id}`, k:'game', j:'AI 게임 게시판', name:'스크래치 게임', title:p.title, desc:p.content,
-          date:p.created_at ? new Date(p.created_at).toLocaleDateString('ko-KR') : '오늘', likes:0, filePath:p.file_path
+          id:`public-${p.id}`, k:p.category, j:C[p.category].name, name:p.uploader || '이름 없음', title:p.title, desc:p.content,
+          date:p.created_at ? new Date(p.created_at).toLocaleDateString('ko-KR') : '오늘', likes:0,
+          filePath:p.file_path, fileName:p.file_name || 'Scratch project.sb3'
         }));
-      publicBoardStatus = `✅ 백엔드 연결됨 · 스크래치 게임 ${publicScratchPosts.length}개 · 공개 다운로드 가능`;
+      publicBoardStatus = `✅ 백엔드 연결됨 · 공개 첨부 작품 ${publicPosts.length}개`;
     } catch (error) {
-      console.error('공개 스크래치 작품을 불러오지 못했습니다.', error);
+      console.error('공개 작품 목록을 불러오지 못했습니다.', error);
       publicBoardStatus = `공개 게시판 연결 오류: ${error.message}`;
     }
   }
@@ -371,38 +379,33 @@ async function refreshPublicScratchPosts(){
   if (status) status.textContent = publicBoardStatus;
   if (location.hash.replace(/^#\/?/, '').split('/')[0] === 'board') board();
 }
-async function uploadScratchProject({title, content, file, button}){
+async function uploadBoardAttachment({category, title, content, uploader, file, button}){
   if (!supabaseUrl || !supabasePublishableKey) return toast('공개 게시판 백엔드가 설정되지 않았어요.');
-  if (!file || !file.name.toLowerCase().endsWith('.sb3')) return toast('Scratch 프로젝트 파일(.sb3)을 선택해 주세요.');
-  if (file.size < 4 || file.size > 50 * 1024 * 1024) return toast('파일은 4바이트 이상, 50MB 이하로 올려 주세요.');
-  let signature;
-  try { signature = new Uint8Array(await file.slice(0,4).arrayBuffer()); }
-  catch(error) { console.error('스크래치 파일을 읽지 못했습니다.', error); return toast('선택한 파일을 읽지 못했어요. 다시 선택해 주세요.'); }
-  if (signature[0] !== 0x50 || signature[1] !== 0x4b || signature[2] !== 0x03 || signature[3] !== 0x04) {
-    return toast('올바른 Scratch .sb3 프로젝트 파일을 선택해 주세요.');
-  }
-  button.disabled = true; button.textContent = '⏳ 스크래치 파일을 올리고 있어요…';
+  if (!file) return toast('첨부할 파일을 선택해 주세요.');
+  if (file.size < 1 || file.size > 50 * 1024 * 1024) return toast('파일은 1바이트 이상, 50MB 이하로 올려 주세요.');
+  if (!content.trim()) return toast('파일을 첨부할 때 작품 소개도 입력해 주세요.');
+  button.disabled = true; button.textContent = '⏳ 첨부 파일을 올리고 있어요…';
   try {
-    const prepared = await boardRequest({action:'prepare', title, content, fileName:file.name, fileSize:file.size});
+    const prepared = await boardRequest({action:'prepare', category, title, content, uploader, fileName:file.name, fileSize:file.size});
     if (typeof prepared.path !== 'string' || typeof prepared.token !== 'string') throw new Error('업로드 주소를 확인할 수 없습니다.');
     const uploadUrl = `${supabaseUrl}/storage/v1/object/upload/sign/scratch-projects/${encodeURIComponent(prepared.path)}?token=${encodeURIComponent(prepared.token)}`;
     const uploadResponse = await fetch(uploadUrl, {
       method:'POST',
-      headers:{apikey:supabasePublishableKey, 'Content-Type':'application/x.scratch.sb3', 'x-upsert':'false'},
+      headers:{apikey:supabasePublishableKey, 'Content-Type':file.type || 'application/octet-stream', 'x-upsert':'false'},
       body:file
     });
     if (!uploadResponse.ok) {
       const data = await uploadResponse.json().catch(() => ({}));
-      throw new Error(data.message || data.error || '파일 업로드에 실패했습니다.');
+      throw new Error(data.message || data.error || '첨부 파일 업로드에 실패했습니다.');
     }
-    await boardRequest({action:'finalize', path:prepared.path, title, content});
-    filt = 'game';
-    await refreshPublicScratchPosts();
+    await boardRequest({action:'finalize', path:prepared.path, category, title, content, uploader, fileName:file.name, fileSize:file.size});
+    filt = category;
+    await refreshPublicBoardPosts();
     $('#modal').classList.remove('open');
     location.hash = '#/board';
-    toast('스크래치 게임을 AI 게임 게시판에 올렸어요! 🎉');
+    toast('첨부 작품을 게시판에 올렸어요! 🎉');
   } catch(error) {
-    console.error('스크래치 게임 업로드에 실패했습니다.', error);
+    console.error('첨부 작품 업로드에 실패했습니다.', error);
     toast(error.message || '작품을 올리지 못했습니다. 잠시 후 다시 시도해 주세요.');
   } finally { button.disabled = false; }
 }
@@ -518,30 +521,28 @@ function lab(k, i){
   $('#up').onclick = () => openUpload(k, i, upd());
 }
 
+const categories = ['video','game','song','art'];
 let filt = 'all';
 function board(){
-  const list = [...publicScratchPosts, ...load()], liked = load(LIKED), shown = list.filter(p => filt === 'all' || p.k === filt);
+  const list = [...publicPosts, ...load()], shown = list.filter(p => filt === 'all' || p.k === filt);
   const cats = [['all','🌟 전체'], ...Object.entries(C).map(([k,c]) => [k, `${c.emoji} ${c.name}`])];
   app.innerHTML = `<section class="board-head"><div><h1>🏆 우리들의 AI 작품 전시관</h1>
     <p>친구들이 AI와 함께 만든 작품을 구경하고 ❤️로 응원해 주세요!</p></div>
     <button class="btn yellow" id="up2">✏️ 작품 올리기</button></section>
-    <div class="filters">${cats.map(([k,t]) => `<button class="chip ${filt===k?'sel':''}" data-f="${k}">${t} (${k==='all'?list.length:list.filter(p=>p.k===k).length})</button>`).join('')}</div>
+    <div class="filters">${cats.map(([k,t]) => `<button class="chip ${filt===k?'sel':''}" data-f="${k}">${t} (${k==='all'?list.length:list.filter(p => p.k === k).length})</button>`).join('')}</div>
     <p class="board-status" id="boardStatus">${esc(publicBoardStatus)}</p>
-    <section class="posts" id="boardPosts">${shown.length ? shown.map(p => post(p, liked.includes(p.id))).join('') : `<div class="empty">아직 작품이 없어요 🥲<br>첫 번째 작품의 주인공이 되어 보세요!</div>`}</section>`;
-}
-function post(p, isLiked){
-  const c = C[p.k] || C.art;
-  const detailLink = p.filePath
-    ? `<button class="post-open" type="button" data-post="${esc(String(p.id))}" aria-label="${esc(p.title)} 작품 자세히 보기"><h3>${esc(p.title)}</h3><span class="by">작품 자세히 보기 →</span></button>`
-    : `<h3>${esc(p.title)}</h3>`;
-  return `<article class="post" style="${vars(c)}">${p.img ? `<img src="${p.img}" alt="${esc(p.title)}">` : `<div class="noimg">${c.emoji}</div>`}
-    <div class="pb"><span class="badge">${c.emoji} ${esc(p.j || c.name)}</span>${detailLink}
-    <div class="by">✏️ ${esc(p.name)} · ${esc(p.date)}</div>${p.desc ? `<p>${esc(p.desc)}</p>` : ''}
-    ${p.prompt ? `<details><summary>🪄 사용한 주문서 보기</summary><pre>${esc(p.prompt)}</pre></details>` : ''}
-    ${p.filePath ? '' : `<div class="row"><button class="like ${isLiked?'done':''}" data-like="${esc(String(p.id))}">❤️ ${p.likes}</button><button class="del" data-del="${esc(String(p.id))}">삭제</button></div>`}</div></article>`;
+    <div class="board-table-wrap"><table class="board-table">
+      <thead><tr><th>번호</th><th>구분</th><th>제목</th><th>올린이</th><th>날짜</th></tr></thead>
+      <tbody>${shown.length ? shown.map((p, index) => {
+        const c = C[p.k] || C.art;
+        return `<tr><td>${index+1}</td><td><span class="board-category" style="${vars(c)}">${c.emoji} ${esc(c.name)}</span></td>
+          <td><button class="board-title" type="button" data-post="${esc(String(p.id))}">${esc(p.title)}</button>${p.fileName ? `<span class="board-attachment">📎 ${esc(p.fileName)}</span>` : ''}</td>
+          <td>${esc(p.name || '이름 없음')}</td><td>${esc(p.date || '')}</td></tr>`;
+      }).join('') : `<tr><td colspan="5" class="empty">아직 작품이 없어요 🥲<br>첫 번째 작품의 주인공이 되어 보세요!</td></tr>`}</tbody>
+    </table></div>`;
 }
 function postDetail(postId){
-  const post = [...publicScratchPosts, ...load()].find(p => String(p.id) === postId);
+  const post = [...publicPosts, ...load()].find(p => String(p.id) === postId);
   if (!post) {
     app.innerHTML = `<section class="post-detail"><button class="nav-btn" id="backToBoard" type="button">← 작품 게시판</button><h1>작품을 찾을 수 없어요</h1><p>게시물이 삭제되었거나 주소가 올바르지 않습니다.</p></section>`;
     $('#backToBoard').addEventListener('click', () => { location.hash = '#/board'; });
@@ -549,16 +550,19 @@ function postDetail(postId){
   }
   const c = C[post.k] || C.art;
   const downloadUrl = post.filePath
-    ? `${supabaseUrl}/storage/v1/object/public/scratch-projects/${encodeURIComponent(post.filePath)}?download=${encodeURIComponent(`${post.title}.sb3`)}`
+    ? `${supabaseUrl}/storage/v1/object/public/scratch-projects/${encodeURIComponent(post.filePath)}?download=${encodeURIComponent(post.fileName || `${post.title}.sb3`)}`
     : '';
   app.innerHTML = `<article class="post-detail" style="${vars(c)}">
     <button class="nav-btn" id="backToBoard" type="button">← 작품 게시판</button>
-    <div class="noimg">${c.emoji}</div>
+    ${post.img ? `<img class="detail-image" src="${esc(post.img)}" alt="${esc(post.title)}">` : `<div class="noimg">${c.emoji}</div>`}
     <span class="badge">${c.emoji} ${esc(post.j || c.name)}</span>
     <h1>${esc(post.title)}</h1>
     <div class="by">✏️ ${esc(post.name)} · ${esc(post.date)}</div>
     <p>${esc(post.desc || '작품 소개가 없습니다.')}</p>
-    ${downloadUrl ? `<a class="post-download" href="${esc(downloadUrl)}">⬇️ Scratch 프로젝트 다운로드 (.sb3)</a>` : ''}
+    ${post.fileName ? `<div class="post-file-name">첨부 파일: ${esc(post.fileName)}</div>` : ''}
+    ${downloadUrl ? `<a class="post-download" href="${esc(downloadUrl)}">⬇️ 첨부 파일 다운로드</a>` : ''}
+    ${post.prompt ? `<details><summary>🪄 사용한 주문서 보기</summary><pre>${esc(post.prompt)}</pre></details>` : ''}
+    ${!post.filePath ? `<div class="row"><button class="like ${load(LIKED).includes(post.id)?'done':''}" data-like="${esc(String(post.id))}">❤️ ${post.likes || 0}</button><button class="del" data-del="${esc(String(post.id))}">삭제</button></div>` : ''}
     <div class="post-detail-actions"><button class="btn ghost" id="backToBoardBottom" type="button">게시판으로 돌아가기</button></div>
   </article>`;
   $('#backToBoard').addEventListener('click', () => { location.hash = '#/board'; });
@@ -581,68 +585,52 @@ app.addEventListener('click', e => {
   }
 });
 
-let draft = {}, img = '';
-let gameFile = null;
+let draft = {}, selectedFile = null;
 $('#fCat').innerHTML = Object.entries(C).map(([k,c]) => `<option value="${k}">${c.emoji} ${c.name}</option>`).join('');
 function openUpload(k, i, prompt){
-  draft = {k, i, prompt}; img = ''; gameFile = null; $('#form').reset(); $('#fCat').value = k;
-  updateUploadFileType();
-  $('#dropTxt').textContent = k === 'game' ? '🎮 Scratch .sb3 파일을 선택해요' : '📷 작품 이미지를 선택해요';
+  draft = {k, i, prompt}; selectedFile = null; $('#form').reset(); $('#fCat').value = k;
+  updateUploadFileHint();
   $('#modal').classList.add('open');
 }
-function updateUploadFileType(){
+function updateUploadFileHint(){
   const isGame = $('#fCat').value === 'game';
-  $('#file').accept = isGame ? '.sb3,application/x.scratch.sb3' : 'image/*';
-  $('#file').required = isGame;
-  $('#fDesc').required = isGame;
   $('#fileHint').textContent = isGame
-    ? 'Scratch 프로젝트(.sb3) 파일만 가능하며 최대 50MB예요. 올린 파일은 AI 게임 게시판에서 모두가 볼 수 있어요.'
-    : '이미지 파일을 선택해 작품 게시판에 올릴 수 있어요.';
-  $('#dropTxt').textContent = isGame ? '🎮 Scratch .sb3 파일을 선택해요' : '📷 작품 이미지를 선택해요';
+    ? '모든 파일 형식의 게임 파일을 첨부할 수 있어요. Scratch .sb3도 가능하며 최대 50MB예요.'
+    : '모든 파일 형식을 첨부할 수 있어요. 파일은 최대 50MB이며 게시판에서 다운로드할 수 있습니다.';
+  $('#dropTxt').textContent = selectedFile ? `📎 선택한 파일: ${selectedFile.name}` : '📎 작품에 첨부할 파일을 선택해요';
 }
 $('#fCat').addEventListener('change', () => {
-  img = ''; gameFile = null; $('#file').value = '';
-  updateUploadFileType();
+  selectedFile = null; $('#file').value = '';
+  updateUploadFileHint();
 });
 $('#cancel').onclick = () => $('#modal').classList.remove('open');
 $('#file').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
-  if ($('#fCat').value === 'game') {
-    if (!f.name.toLowerCase().endsWith('.sb3')) { e.target.value = ''; return toast('Scratch 프로젝트 파일(.sb3)을 선택해 주세요.'); }
-    gameFile = f;
-    $('#dropTxt').textContent = `🎮 선택한 게임 파일: ${f.name}`;
-    return;
-  }
-  const r = new FileReader();
-  r.onload = () => { const im = new Image(); im.onload = () => {
-    const s = Math.min(1, 900 / Math.max(im.width, im.height)), cv = document.createElement('canvas');
-    cv.width = im.width * s; cv.height = im.height * s; cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
-    img = cv.toDataURL('image/jpeg', .75); $('#dropTxt').innerHTML = `<img src="${img}">`;
-  }; im.src = r.result; };
-  r.readAsDataURL(f);
+  selectedFile = f;
+  updateUploadFileHint();
 };
 $('#form').onsubmit = async e => {
   e.preventDefault();
   const k = $('#fCat').value, list = load();
-  if (k === 'game') {
-    const title = $('#fTitle').value.trim(), content = $('#fDesc').value.trim();
-    if (!gameFile) return toast('Scratch .sb3 파일을 선택해 주세요.');
+  const title = $('#fTitle').value.trim(), content = $('#fDesc').value.trim(), uploader = $('#fName').value.trim();
+  if (selectedFile) {
     const button = $('#form').querySelector('button[type="submit"]');
-    button.disabled = true; button.textContent = '⏳ 스크래치 파일을 올리고 있어요…';
+    button.disabled = true; button.textContent = '⏳ 첨부 파일을 올리고 있어요…';
     try {
-      await uploadScratchProject({title, content, file:gameFile, button});
+      await uploadBoardAttachment({category:k, title, content, uploader, file:selectedFile, button});
     } finally {
       button.disabled = false; button.textContent = '올리기 🎉';
     }
     return;
   }
+  if (k === 'game') return toast('AI 게임 작품은 파일을 첨부해 주세요.');
   const j = (draft.i !== null && draft.k === k) ? C[k].jobs[draft.i].n : C[k].name;
-  list.unshift({id: Date.now(), k, j, name: $('#fName').value.trim(), title: $('#fTitle').value.trim(), desc: $('#fDesc').value.trim(),
-    prompt: draft.prompt || '', img, date: new Date().toLocaleDateString('ko-KR'), likes: 0});
+  list.unshift({id: Date.now(), k, j, name:uploader, title, desc:content,
+    prompt: draft.prompt || '', date: new Date().toLocaleDateString('ko-KR'), likes: 0});
   try { save(list); } catch (err) { return toast('저장 공간이 꽉 찼어요. 더 작은 이미지를 골라 주세요'); }
   $('#modal').classList.remove('open'); filt = 'all'; toast('게시판에 올렸어요! 🎉'); location.hash = '#/board';
 };
-addEventListener('hashchange', render); render(); refreshPublicScratchPosts();
+addEventListener('hashchange', render); render(); refreshPublicBoardPosts();
 </script>
 </body>
 </html>

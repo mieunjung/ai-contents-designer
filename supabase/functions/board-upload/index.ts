@@ -7,6 +7,7 @@ const allowedOrigins = new Set([
 ]);
 const bucket = "scratch-projects";
 const maxFileBytes = 50 * 1024 * 1024;
+const categories = new Set(["video", "game", "song", "art"]);
 const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -70,18 +71,36 @@ Deno.serve(async (request) => {
   });
 
   if (body.action === "prepare") {
-    const { title, content, fileName, fileSize } = body;
+    const {
+      title,
+      content,
+      fileName,
+      fileSize,
+      category = "game",
+      uploader = "스크래치 게임",
+    } = body;
     if (typeof title !== "string" || !title.trim() || title.trim().length > 50) {
       return jsonResponse({ error: "작품 제목은 1~50자로 입력해 주세요." }, 400, origin);
     }
     if (typeof content !== "string" || !content.trim() || content.trim().length > 500) {
       return jsonResponse({ error: "작품 소개는 1~500자로 입력해 주세요." }, 400, origin);
     }
-    if (typeof fileName !== "string" || !fileName.toLowerCase().endsWith(".sb3")) {
-      return jsonResponse({ error: "Scratch 프로젝트 파일(.sb3)만 올릴 수 있어요." }, 400, origin);
+    if (typeof category !== "string" || !categories.has(category)) {
+      return jsonResponse({ error: "작품 분야를 확인해 주세요." }, 400, origin);
     }
-    if (!Number.isSafeInteger(fileSize) || Number(fileSize) < 4 || Number(fileSize) > maxFileBytes) {
-      return jsonResponse({ error: "파일 크기는 1~50MB만 허용됩니다." }, 413, origin);
+    if (typeof uploader !== "string" || !uploader.trim() || uploader.trim().length > 20) {
+      return jsonResponse({ error: "올린이 이름은 1~20자로 입력해 주세요." }, 400, origin);
+    }
+    if (
+      typeof fileName !== "string" ||
+      !fileName.trim() ||
+      fileName.trim().length > 180 ||
+      /[\/\\\u0000-\u001f\u007f]/.test(fileName)
+    ) {
+      return jsonResponse({ error: "첨부 파일 이름을 확인해 주세요." }, 400, origin);
+    }
+    if (!Number.isSafeInteger(fileSize) || Number(fileSize) < 1 || Number(fileSize) > maxFileBytes) {
+      return jsonResponse({ error: "파일 크기는 1바이트 이상, 50MB 이하만 허용됩니다." }, 413, origin);
     }
 
     const clientAddress = request.headers.get("cf-connecting-ip") ||
@@ -95,33 +114,41 @@ Deno.serve(async (request) => {
       p_client_hash: await hashClientAddress(clientAddress, serviceRoleKey),
     });
     if (quotaError) {
-      console.error("Scratch upload quota check failed:", quotaError.message);
+      console.error("Board attachment quota check failed:", quotaError.message);
       return jsonResponse({ error: "업로드 한도 확인에 실패했습니다." }, 503, origin);
     }
     if (quota === "daily_limit") {
-      return jsonResponse({ error: "오늘 사이트의 전체 스크래치 업로드 한도에 도달했어요." }, 429, origin);
+      return jsonResponse({ error: "오늘 사이트의 전체 첨부 파일 업로드 한도에 도달했어요." }, 429, origin);
     }
     if (quota === "client_limit") {
       return jsonResponse({ error: "하루 업로드 횟수(IP 기준 10회)를 다 사용했어요. 내일 다시 시도해 주세요." }, 429, origin);
     }
     if (quota !== "ok") {
-      console.error("Unexpected Scratch upload quota response:", quota);
+      console.error("Unexpected board attachment quota response:", quota);
       return jsonResponse({ error: "업로드 한도를 확인하지 못했습니다." }, 503, origin);
     }
 
-    const path = `${crypto.randomUUID()}.sb3`;
+    const path = crypto.randomUUID();
     const { data, error } = await admin.storage.from(bucket).createSignedUploadUrl(path, { upsert: false });
     if (error) {
-      console.error("Could not create signed Scratch upload URL:", error.message);
+      console.error("Could not create signed board attachment upload URL:", error.message);
       return jsonResponse({ error: "업로드 주소를 만들지 못했습니다. 잠시 후 다시 시도해 주세요." }, 503, origin);
     }
     return jsonResponse({ path, token: data.token }, 200, origin);
   }
 
-  const { path, title, content } = body;
+  const {
+    path,
+    title,
+    content,
+    category = "game",
+    uploader = "스크래치 게임",
+    fileName = "Scratch project.sb3",
+    fileSize,
+  } = body;
   if (
     typeof path !== "string" ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.sb3$/.test(path)
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\.sb3)?$/.test(path)
   ) {
     return jsonResponse({ error: "업로드 파일 정보를 확인할 수 없습니다." }, 400, origin);
   }
@@ -131,39 +158,63 @@ Deno.serve(async (request) => {
   if (typeof content !== "string" || !content.trim() || content.trim().length > 500) {
     return jsonResponse({ error: "작품 소개를 확인해 주세요." }, 400, origin);
   }
+  if (typeof category !== "string" || !categories.has(category)) {
+    return jsonResponse({ error: "작품 분야를 확인해 주세요." }, 400, origin);
+  }
+  if (typeof uploader !== "string" || !uploader.trim() || uploader.trim().length > 20) {
+    return jsonResponse({ error: "올린이 이름은 1~20자로 입력해 주세요." }, 400, origin);
+  }
+  if (
+    typeof fileName !== "string" ||
+    !fileName.trim() ||
+    fileName.trim().length > 180 ||
+    /[\/\\\u0000-\u001f\u007f]/.test(fileName)
+  ) {
+    return jsonResponse({ error: "첨부 파일 이름을 확인해 주세요." }, 400, origin);
+  }
+  if (
+    fileSize !== undefined &&
+    (!Number.isSafeInteger(fileSize) || Number(fileSize) < 1 || Number(fileSize) > maxFileBytes)
+  ) {
+    return jsonResponse({ error: "파일 크기는 1바이트 이상, 50MB 이하만 허용됩니다." }, 413, origin);
+  }
 
   const { data: files, error: listError } = await admin.storage.from(bucket).list("", {
     limit: 1,
     search: path,
   });
   if (listError) {
-    console.error("Could not verify uploaded Scratch file:", listError.message);
+    console.error("Could not verify uploaded board attachment:", listError.message);
     return jsonResponse({ error: "업로드 파일을 확인하지 못했습니다." }, 503, origin);
   }
   const uploadedFile = files.find((file) => file.name === path);
   const uploadedSize = Number(uploadedFile?.metadata?.size);
-  if (!uploadedFile || !Number.isFinite(uploadedSize) || uploadedSize < 4 || uploadedSize > maxFileBytes) {
-    return jsonResponse({ error: "업로드된 Scratch 파일을 찾을 수 없습니다." }, 400, origin);
-  }
-  if (uploadedFile.metadata?.mimetype !== "application/x.scratch.sb3") {
-    await admin.storage.from(bucket).remove([path]);
-    return jsonResponse({ error: "올바른 Scratch 프로젝트 파일(.sb3)이 아닙니다." }, 400, origin);
+  if (
+    !uploadedFile ||
+    !Number.isFinite(uploadedSize) ||
+    (typeof fileSize === "number" && uploadedSize !== fileSize) ||
+    uploadedSize < 1 ||
+    uploadedSize > maxFileBytes
+  ) {
+    return jsonResponse({ error: "업로드된 첨부 파일을 찾을 수 없거나 파일 크기가 일치하지 않습니다." }, 400, origin);
   }
 
   const { data: post, error: insertError } = await admin
     .from("board_posts")
     .insert({
-      category: "game",
+      uploader: uploader.trim(),
+      file_name: fileName.trim(),
+      category,
       title: title.trim(),
       content: content.trim(),
       file_path: path,
     })
-    .select("id, category, title, content, created_at, file_path")
+    .select("id, category, title, content, uploader, file_name, created_at, file_path")
     .single();
   if (insertError) {
     const { data: existingPost, error: lookupError } = await admin
       .from("board_posts")
-      .select("id, category, title, content, created_at, file_path")
+      .select("id, category, title, content, uploader, file_name, created_at, file_path")
       .eq("file_path", path)
       .maybeSingle();
     if (lookupError) {
